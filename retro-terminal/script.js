@@ -6,6 +6,7 @@ const warning = document.querySelector("#warning");
 const titleText = document.querySelector("#title-text");
 const srStatus = document.querySelector("#sr-status");
 const percentText = document.querySelector("#percent");
+const asciiBarEl = document.querySelector("#ascii-bar");
 const refreshButtons = [...document.querySelectorAll("[data-refresh-hz]")];
 
 const LONG_SHIFT_MINUTES = 16 * 60; // flag shifts longer than 16h as likely AM/PM typos
@@ -143,6 +144,29 @@ function asciiBar(progress, width) {
   return `[${"#".repeat(filled)}${"-".repeat(width - filled)}] ${String(Math.floor(progress)).padStart(3, "0")}%`;
 }
 
+// A fixed 24 cells at a fixed font size only spanned about 57% of the track,
+// so the bar appeared stuck around half way even close to 100%. Derive the cell
+// count from the space actually available.
+const BAR_OVERHEAD = 7; // "[", "]", " ", and "000%"
+let barCells = 24;
+let barNeedsFit = true;
+
+function fitBarToTrack() {
+  const text = asciiBarEl.textContent;
+  if (!text) return false;
+  const range = document.createRange();
+  range.selectNodeContents(asciiBarEl);
+  const textWidth = range.getBoundingClientRect().width;
+  const available = asciiBarEl.getBoundingClientRect().width;
+  if (!textWidth || !available) return false;
+  // Both are rendered pixels, so the card's zoom cancels out of the ratio.
+  const charWidth = textWidth / text.length;
+  const next = Math.max(10, Math.floor(available / charWidth) - BAR_OVERHEAD);
+  if (next === barCells) return false;
+  barCells = next;
+  return true;
+}
+
 function progressForShift(shift, now) {
   const duration = shift.end - shift.start;
   const elapsed = now - shift.start;
@@ -251,7 +275,13 @@ function update() {
       : `FREEDOM ETA: ${endTime}`);
   setText(document.querySelector("#message"), message);
   document.querySelector("#progress-count").textContent = `${String(wholePercent).padStart(3, "0")}/100`;
-  document.querySelector("#ascii-bar").textContent = asciiBar(progress, 24);
+  asciiBarEl.textContent = asciiBar(progress, barCells);
+  // Measuring costs a reflow, so only re-fit after a resize, then redraw once
+  // at the corrected width.
+  if (barNeedsFit) {
+    barNeedsFit = false;
+    if (fitBarToTrack()) asciiBarEl.textContent = asciiBar(progress, barCells);
+  }
   document.querySelector("#progress-track").setAttribute("aria-valuenow", wholePercent);
   document.querySelector("#worked").textContent = formatDuration(worked);
   document.querySelector("#remaining").textContent = formatDuration(remaining, Math.ceil);
@@ -288,18 +318,18 @@ function fitToViewport() {
   // viewport. A hard-coded guess understated it and left the card overflowing
   // on exactly the 720p screens this exists for, so measure it instead.
   const shell = getComputedStyle(card.parentElement);
-  const slack = 1; // absorbs sub-pixel rounding
+  const slack = 2; // absorbs sub-pixel rounding; 1px still overflowed at 1280x480
   const availY = window.innerHeight - parseFloat(shell.paddingTop) - parseFloat(shell.paddingBottom) - slack;
   const availX = window.innerWidth - parseFloat(shell.paddingLeft) - parseFloat(shell.paddingRight) - slack;
 
   // The card's padding and type are sized in vh/vw, which grow relative to the
   // card as it shrinks, so a single pass always lands short. Converge instead.
   let scale = 1;
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 8; i++) {
     const box = card.getBoundingClientRect();
     if (!box.height || !box.width) break;
     const next = Math.min(1, scale * Math.min(availY / box.height, availX / box.width));
-    if (Math.abs(next - scale) < 0.001) break;
+    if (Math.abs(next - scale) < 0.0002) break;
     scale = next;
     card.style.zoom = scale;
   }
@@ -322,6 +352,8 @@ window.addEventListener("resize", () => {
   requestAnimationFrame(() => {
     resizeQueued = false;
     fitToViewport();
+    barNeedsFit = true;
+    update();
   });
 });
 

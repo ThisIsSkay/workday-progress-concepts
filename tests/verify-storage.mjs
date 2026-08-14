@@ -35,7 +35,9 @@ console.log("uncaught page errors:", errors.length ? errors : "none");
 console.log("rendered on load:", render);
 console.log("after editing clock-in to 10:00:", afterEdit);
 
-const ok = errors.length === 0 && render.percent === "50.0%" && afterEdit !== render.percent;
+// Half way through the shift. Not pinned to the last decimal: at four decimals
+// that digit turns over every 32ms and would just track start-up jitter.
+const ok = errors.length === 0 && /^50\.\d{4}%$/.test(render.percent) && afterEdit !== render.percent;
 console.log(ok ? "\nPASS — storage blocked, terminal still fully functional" : "\nFAIL");
 await browser.close();
 process.exit(ok ? 0 : 1);

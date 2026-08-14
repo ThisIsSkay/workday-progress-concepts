@@ -54,7 +54,7 @@ console.log("\n=== Bug 2: overnight grace must not inherit tomorrow's DST shift 
 const g = await snap({ start: "18:00", end: "02:30", when: utc(2026, 2, 7, 7, 45) });
 check("Mar 7 02:45 EST -> shift already finished", g.title, "YOU MAY LOG OFF NOW");
 check("Mar 7 02:45 EST -> ended 2:30 AM, not 3:30", g.note, (n) => n.includes("2:30") && !n.includes("3:30"));
-check("Mar 7 02:45 EST -> 100.0%, not 92.1%", g.percent, "100.0%");
+check("Mar 7 02:45 EST -> 100.0000%, not 92.1%", g.percent, "100.0000%");
 check("Mar 7 02:45 EST -> nothing remaining", g.remaining, "0h 00m");
 const gOk = await snap({ start: "18:00", end: "02:30", when: utc(2026, 7, 10, 6, 45) });
 check("non-DST night, same shape -> still completed", gOk.title, "YOU MAY LOG OFF NOW");
