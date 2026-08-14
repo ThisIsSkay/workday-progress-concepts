@@ -176,7 +176,9 @@ function update() {
   const message = messageFor(progress);
 
   const wholePercent = Math.floor(progress);
-  document.querySelector("#percent").textContent = `${(Math.floor(progress * 10) / 10).toFixed(1)}%`;
+  // Floor to hundredths so the live readout has more motion without ever
+  // displaying 100.00% before the shift has actually ended.
+  document.querySelector("#percent").textContent = `${(Math.floor(progress * 100) / 100).toFixed(2)}%`;
   setText(document.querySelector("#end-note"), complete
     ? `LOGGED OFF · SHIFT ENDED ${endTime}`
     : notStarted
