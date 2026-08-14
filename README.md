@@ -1,5 +1,7 @@
 # Workday Progress Concepts
 
+**▶ Live demo:** https://thisisskay.github.io/workday-progress-concepts/retro-terminal/
+
 Small, self-contained web toys that answer one question: **when can I log off?**
 
 ## Concepts
