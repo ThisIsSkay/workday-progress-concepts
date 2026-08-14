@@ -5,8 +5,12 @@ const error = document.querySelector("#error");
 const warning = document.querySelector("#warning");
 const titleText = document.querySelector("#title-text");
 const srStatus = document.querySelector("#sr-status");
+const percentText = document.querySelector("#percent");
+const refreshButtons = [...document.querySelectorAll("[data-refresh-hz]")];
 
 const LONG_SHIFT_MINUTES = 16 * 60; // flag shifts longer than 16h as likely AM/PM typos
+const REFRESH_RATES = [1, 5, 10, 30];
+const DEFAULT_REFRESH_HZ = 1;
 
 const ERR_IDENTICAL = "ERR_0x01: START AND END TIME MUST DIFFER.";
 const ERR_INCOMPLETE = "ERR_0x02: ENTER BOTH A CLOCK-IN AND A CLOCK-OUT TIME.";
@@ -45,6 +49,11 @@ function restoreTime(input, key, fallback) {
 
 restoreTime(startInput, "workday-start", "09:00");
 restoreTime(endInput, "workday-end", "18:00");
+
+const storedRefreshHz = Number(readStored("workday-refresh-hz", String(DEFAULT_REFRESH_HZ)));
+let refreshHz = REFRESH_RATES.includes(storedRefreshHz) ? storedRefreshHz : DEFAULT_REFRESH_HZ;
+let percentTimer = null;
+let currentShift = null;
 
 const MESSAGES = [
   [0, "BOOT SEQUENCE INITIATED…"],
@@ -133,6 +142,55 @@ function asciiBar(progress, width) {
   return `[${"#".repeat(filled)}${"-".repeat(width - filled)}] ${String(Math.floor(progress)).padStart(3, "0")}%`;
 }
 
+function progressForShift(shift, now) {
+  const duration = shift.end - shift.start;
+  const elapsed = now - shift.start;
+  return Math.min(100, Math.max(0, (elapsed / duration) * 100));
+}
+
+function renderPercent(progress) {
+  // Floor to thousandths so a normal workday visibly advances on every 1Hz
+  // tick without ever displaying 100.000% before the shift has actually ended.
+  percentText.textContent = `${(Math.floor(progress * 1000) / 1000).toFixed(3)}%`;
+}
+
+// The rest of the terminal remains on its original 1Hz update loop. Higher
+// refresh rates only redraw the large percentage, keeping 30Hz deliberately
+// cheap even on modest hardware.
+function updateLivePercent() {
+  if (!currentShift || document.hidden) return;
+  renderPercent(progressForShift(currentShift, new Date()));
+}
+
+function restartPercentTicker() {
+  if (percentTimer !== null) {
+    clearInterval(percentTimer);
+    percentTimer = null;
+  }
+  if (refreshHz > 1) {
+    percentTimer = setInterval(updateLivePercent, 1000 / refreshHz);
+  }
+}
+
+function syncRefreshControls() {
+  for (const button of refreshButtons) {
+    button.setAttribute("aria-pressed", String(Number(button.dataset.refreshHz) === refreshHz));
+  }
+}
+
+function setRefreshHz(nextHz) {
+  if (!REFRESH_RATES.includes(nextHz) || nextHz === refreshHz) return;
+  refreshHz = nextHz;
+  try {
+    localStorage.setItem("workday-refresh-hz", String(refreshHz));
+  } catch {
+    // A blocked/full store should not stop the control from working this session.
+  }
+  syncRefreshControls();
+  restartPercentTicker();
+  updateLivePercent();
+}
+
 function update() {
   const now = new Date();
   const shift = getShiftBounds(now);
@@ -140,6 +198,7 @@ function update() {
   error.hidden = !failed;
   results.hidden = failed;
   if (failed) {
+    currentShift = null;
     setText(error, shift.error);
     warning.hidden = true;
     document.body.classList.remove("complete");
@@ -148,9 +207,10 @@ function update() {
     return;
   }
 
+  currentShift = shift;
   const duration = shift.end - shift.start;
   const elapsed = now - shift.start;
-  const progress = Math.min(100, Math.max(0, (elapsed / duration) * 100));
+  const progress = progressForShift(shift, now);
   const worked = Math.min(duration, Math.max(0, elapsed));
   const remaining = Math.min(duration, Math.max(0, shift.end - now));
   const notStarted = elapsed < 0;
@@ -176,9 +236,7 @@ function update() {
   const message = messageFor(progress);
 
   const wholePercent = Math.floor(progress);
-  // Floor to thousandths so a normal workday visibly advances on every 1Hz
-  // tick without ever displaying 100.000% before the shift has actually ended.
-  document.querySelector("#percent").textContent = `${(Math.floor(progress * 1000) / 1000).toFixed(3)}%`;
+  renderPercent(progress);
   setText(document.querySelector("#end-note"), complete
     ? `LOGGED OFF · SHIFT ENDED ${endTime}`
     : notStarted
@@ -263,10 +321,19 @@ window.addEventListener("resize", () => {
 // Timers are throttled in background tabs and stop entirely while a device
 // sleeps, so catch up as soon as the terminal is on screen again.
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) update();
+  if (!document.hidden) {
+    update();
+    updateLivePercent();
+  }
 });
 
 startInput.addEventListener("input", saveTimes);
 endInput.addEventListener("input", saveTimes);
+for (const button of refreshButtons) {
+  button.addEventListener("click", () => setRefreshHz(Number(button.dataset.refreshHz)));
+}
+
+syncRefreshControls();
 update();
+restartPercentTicker();
 setInterval(update, 1000);

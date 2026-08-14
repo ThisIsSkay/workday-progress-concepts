@@ -75,6 +75,37 @@ check("17:59:59 still shows 99.xxx%, never 100.000%", almostDone.percent,
 const quarter = await snap(at(11, 15, 0), "09:00", "18:00");
 check("11:15 -> exact 25.000%", quarter.percent, "25.000%");
 
+console.log("\n=== Selectable percentage refresh rate ===");
+{
+  const ctx = await browser.newContext();
+  await ctx.addInitScript(() => {
+    localStorage.setItem("workday-start", "12:00");
+    localStorage.setItem("workday-end", "12:01");
+  });
+  const page = await ctx.newPage();
+  await page.clock.install({ time: at(12, 0, 10) });
+  await page.goto(URL);
+  await page.clock.runFor(50);
+
+  const initialPressed = await page.locator('[data-refresh-hz][aria-pressed="true"]').getAttribute("data-refresh-hz");
+  check("default refresh rate is 1Hz", initialPressed, "1");
+
+  await page.locator('[data-refresh-hz="30"]').click();
+  const first = await page.locator("#percent").textContent();
+  await page.clock.runFor(150);
+  const second = await page.locator("#percent").textContent();
+  check("30Hz updates percentage inside the 1Hz full-update window", second, (value) => value !== first);
+
+  const stored = await page.evaluate(() => localStorage.getItem("workday-refresh-hz"));
+  check("selected refresh rate persists", stored, "30");
+
+  await page.reload();
+  await page.clock.runFor(50);
+  const restoredPressed = await page.locator('[data-refresh-hz][aria-pressed="true"]').getAttribute("data-refresh-hz");
+  check("reload restores 30Hz selection", restoredPressed, "30");
+  await ctx.close();
+}
+
 console.log("\n=== Error messaging + regressions ===");
 const same = await snap(at(12, 0), "09:00", "09:00");
 check("identical times -> ERR_0x01", same.errText, (t) => t.includes("ERR_0x01") && t.includes("DIFFER"));

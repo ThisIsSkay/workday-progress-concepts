@@ -6,8 +6,8 @@
     <meta name="description" content="See when your workday ends and watch the shift tick toward 100%.">
     <meta name="theme-color" content="#0a0f0a">
     <title>WORKDAY.SYS — Retro Terminal</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="script.js?v=3dp" defer></script>
+    <link rel="stylesheet" href="styles.css?v=refresh-30">
+    <script src="script.js?v=refresh-30" defer></script>
   </head>
   <body>
     <main>
@@ -61,7 +61,18 @@
           </dl>
         </div>
 
-        <footer>LOCAL STORAGE ONLY · NO DATA LEAVES THIS TERMINAL · REFRESH: 1Hz</footer>
+        <footer>
+          <span>LOCAL STORAGE ONLY · NO DATA LEAVES THIS TERMINAL</span>
+          <span class="footer-separator" aria-hidden="true">·</span>
+          <span class="refresh-control" role="group" aria-label="Percentage refresh rate">
+            <span class="refresh-label">REFRESH:</span>
+            <button type="button" data-refresh-hz="1" aria-label="1 Hz" aria-pressed="true">1</button>
+            <button type="button" data-refresh-hz="5" aria-label="5 Hz" aria-pressed="false">5</button>
+            <button type="button" data-refresh-hz="10" aria-label="10 Hz" aria-pressed="false">10</button>
+            <button type="button" data-refresh-hz="30" aria-label="30 Hz" aria-pressed="false">30</button>
+            <span class="refresh-unit">Hz</span>
+          </span>
+        </footer>
       </section>
     </main>
   </body>

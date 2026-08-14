@@ -14,14 +14,15 @@ build step, no dependencies, and no network calls.
 ### `retro-terminal/` — WORKDAY.SYS
 
 A green-phosphor CRT terminal that tracks a shift in real time. You enter a
-clock-in and clock-out time; the display updates once per second.
+clock-in and clock-out time; shift state and stats update once per second, while
+the large percentage can be refreshed at 1, 5, 10, or 30 Hz.
 
 **Display**
 
 | Element | Description |
 | --- | --- |
 | Headline | Reflects shift state: `NOT ON THE CLOCK YET`, `WHEN CAN I LOG OFF`, or `YOU MAY LOG OFF NOW` |
-| Percentage | Progress through the shift, to three decimal places |
+| Percentage | Progress through the shift, to three decimal places, with a user-selectable 1/5/10/30 Hz refresh rate |
 | ASCII bar | 24-cell `[####----]` progress bar with an integer percentage |
 | End note | Clock-in time, projected finish time, or the time the shift ended |
 | Stats | Worked, remaining, and total shift duration |
@@ -46,6 +47,9 @@ When the shift completes, the entire terminal switches from green to red.
 - **Progress readouts always round down.** The bar, the counter, and the
   percentage only reach 100 when the shift has genuinely ended, rather than
   appearing complete in the final minutes.
+- **Refresh rate is user-selectable.** The footer offers 1, 5, 10, and 30 Hz.
+  Only the large percentage uses the faster ticker; all other calculations stay
+  on the original 1 Hz loop. The selected rate is remembered in `localStorage`.
 - **Worked and remaining always sum to the total**, by flooring the former and
   rounding the latter up.
 - **Long shifts are flagged.** An entered span over 16 hours shows a warning,
@@ -54,7 +58,7 @@ When the shift completes, the entire terminal switches from green to red.
 - **Times are remembered** in `localStorage`, and are validated on restore so a
   corrupt or stale value falls back to the default rather than opening the page
   in an error state. If storage is unavailable, the page still works — it just
-  will not restore your times next visit.
+  will not restore your times or refresh-rate preference next visit.
 - **The layout scales to fit.** On short screens the terminal shrinks so it fits
   without scrolling. Below 700px wide it renders at full size and scrolls
   normally.
@@ -95,7 +99,9 @@ are no polyfills and no transpilation step.
 
 - The progress bar exposes `role="progressbar"` with a live `aria-valuenow`.
 - Progress milestones are announced to screen readers through a polite live
-  region, rather than on every one-second tick.
+  region, rather than on every percentage refresh tick.
+- The refresh-rate controls are native buttons in a labelled group and expose
+  the selected setting with `aria-pressed`.
 - Validation errors use `role="alert"`; the long-shift warning uses
   `role="status"`. Both are only rewritten when their text actually changes, so
   a live region is not re-announced on every one-second tick.
@@ -107,8 +113,8 @@ are no polyfills and no transpilation step.
 ## Privacy
 
 Everything runs in the browser. The only data stored is your clock-in and
-clock-out time, kept in `localStorage` on your own device. There is no
-analytics, no tracking, and no server component.
+clock-out time plus the selected percentage refresh rate, kept in `localStorage`
+on your own device. There is no analytics, no tracking, and no server component.
 
 ## Adding a concept
 

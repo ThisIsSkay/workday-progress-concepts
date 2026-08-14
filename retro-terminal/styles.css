@@ -239,11 +239,49 @@ body.complete .glow {
 footer {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   margin-top: clamp(16px, 3vh, 26px);
   color: var(--phosphor-dim);
   font-size: 10px;
   letter-spacing: .04em;
   text-align: center;
+}
+
+.refresh-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.refresh-control button {
+  appearance: none;
+  min-width: 24px;
+  padding: 2px 4px;
+  background: transparent;
+  color: var(--phosphor-dim);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.refresh-control button:hover {
+  color: var(--phosphor);
+}
+
+.refresh-control button:focus-visible {
+  outline: 1px solid var(--phosphor);
+  outline-offset: 1px;
+}
+
+.refresh-control button[aria-pressed="true"] {
+  color: var(--phosphor);
+  border-color: currentColor;
 }
 
 .sr-only {

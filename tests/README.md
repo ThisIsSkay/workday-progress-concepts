@@ -14,7 +14,7 @@ Exits non-zero if any suite fails. Set `PORT` to use a different port, or
 
 | Suite | Covers |
 | --- | --- |
-| `verify.mjs` | Core behaviour: overnight shifts, the completed-state grace window, and the rule that no readout may show 100 before the shift actually ends |
+| `verify.mjs` | Core behaviour: overnight shifts, the completed-state grace window, no readout reaching 100 early, and selectable/persisted 1/5/10/30 Hz percentage refresh |
 | `verify-dst.mjs` | Daylight saving: the nonexistent hour on spring-forward, the overnight grace window inheriting a DST adjustment, the entered-span basis for the long-shift warning, and validation of restored values. Runs under `America/New_York` |
 | `verify-storage.mjs` | The page stays usable where `localStorage` throws (blocked cookies, sandboxed iframe) |
 | `sums.mjs` | `WORKED + REMAINING` always equals `TOTAL SHIFT` |
