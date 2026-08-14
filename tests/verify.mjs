@@ -35,7 +35,7 @@ function check(label, actual, expected) {
   ok ? pass++ : fail++;
 }
 
-const at = (h, m, s = 0, day = 10) => new Date(2026, 7, day, h, m, s);
+const at = (h, m, s = 0, ms = 0, day = 10) => new Date(2026, 7, day, h, m, s, ms);
 
 console.log("\n=== BUG 1: overnight 22:00->06:00, log-off screen must survive the end of the shift ===");
 for (const [h, m] of [[6, 0], [6, 1], [9, 0], [11, 59]]) {
@@ -106,6 +106,69 @@ console.log("\n=== Selectable percentage refresh rate ===");
   await page.clock.runFor(50);
   const restoredPressed = await page.locator('[data-refresh-hz][aria-pressed="true"]').getAttribute("data-refresh-hz");
   check("reload restores 30Hz selection", restoredPressed, "30");
+  await ctx.close();
+}
+
+console.log("\n=== Percentage stays centred over its fraction at any digit count ===");
+for (const [h, m, digits] of [[9, 27, 1], [13, 30, 2], [18, 0, 3]]) {
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await ctx.addInitScript(() => {
+    localStorage.setItem("workday-start", "09:00");
+    localStorage.setItem("workday-end", "18:00");
+  });
+  const page = await ctx.newPage();
+  await page.clock.install({ time: at(h, m) });
+  await page.goto(URL);
+  await page.clock.runFor(80);
+  const geom = await page.evaluate(() => {
+    // Measure the glyphs, not the boxes: a stretched grid item hid this once.
+    const glyph = (sel) => {
+      const range = document.createRange();
+      range.selectNodeContents(document.querySelector(sel));
+      return range.getBoundingClientRect();
+    };
+    const whole = glyph(".percent-whole"), frac = glyph(".percent-fraction"), sign = glyph(".percent-sign");
+    return {
+      text: document.querySelector("#percent").textContent,
+      offset: (whole.left + whole.width / 2) - (frac.left + frac.width / 2),
+      gap: sign.left - whole.right,
+    };
+  });
+  check(`${digits}-digit (${geom.text}) fraction centred under the number`, Math.abs(geom.offset), (v) => v < 1.5);
+  check(`${digits}-digit percent sign stays beside the number`, geom.gap, (v) => v >= 0 && v < 8);
+  await ctx.close();
+}
+
+console.log("\n=== 30Hz must not show 100% while the rest of the UI says in-progress ===");
+{
+  const ctx = await browser.newContext();
+  await ctx.addInitScript(() => {
+    localStorage.setItem("workday-start", "09:00");
+    localStorage.setItem("workday-end", "18:00");
+  });
+  const page = await ctx.newPage();
+  // Load off the whole second: the 1Hz loop's phase is set at load and has
+  // nothing to do with when the shift ends, which is what exposed this.
+  await page.clock.install({ time: at(17, 59, 58, 900) });
+  await page.goto(URL);
+  await page.clock.runFor(10);
+  await page.locator('[data-refresh-hz="30"]').click();
+  let desyncMs = 0;
+  for (let i = 0; i < 90; i++) {
+    await page.clock.runFor(20);
+    const s = await page.evaluate(() => ({
+      pct: document.querySelector("#percent").textContent,
+      complete: document.body.classList.contains("complete"),
+    }));
+    if (s.pct === "100.0000%" && !s.complete) desyncMs += 20;
+  }
+  check(`percent never reads 100 before the UI completes (${desyncMs}ms)`, desyncMs, 0);
+  const done = await page.evaluate(() => ({
+    title: document.querySelector("#title-text").textContent,
+    complete: document.body.classList.contains("complete"),
+  }));
+  check("…and the shift does complete", done.title, "YOU MAY LOG OFF NOW");
+  check("…with the completed theme applied", done.complete, true);
   await ctx.close();
 }
 

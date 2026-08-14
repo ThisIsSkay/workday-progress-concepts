@@ -179,7 +179,7 @@ function renderPercent(progress) {
   // stays large with its percent sign, while the live .0000 sits underneath.
   const formatted = (Math.floor(progress * 10000) / 10000).toFixed(4);
   const [whole, fraction] = formatted.split(".");
-  const html = `<span class="percent-whole">${whole}</span><span class="percent-fraction">.${fraction}</span><span class="percent-sign">%</span>`;
+  const html = `<span class="percent-main"><span class="percent-whole">${whole}</span><span class="percent-fraction">.${fraction}</span></span><span class="percent-sign">%</span>`;
   if (html === lastPercentHtml) return;
   lastPercentHtml = html;
   percentText.innerHTML = html;
@@ -190,7 +190,15 @@ function renderPercent(progress) {
 // cheap even on modest hardware.
 function updateLivePercent() {
   if (!currentShift || document.hidden) return;
-  renderPercent(progressForShift(currentShift, new Date()));
+  const progress = progressForShift(currentShift, new Date());
+  // Crossing 100 between 1Hz ticks would otherwise park the big number at
+  // 100.0000% for up to a second while the headline, bar, counter and colour
+  // still read as in-progress. Hand the crossing to the full update instead.
+  if (progress >= 100 && !document.body.classList.contains("complete")) {
+    update();
+    return;
+  }
+  renderPercent(progress);
 }
 
 function restartPercentTicker() {
