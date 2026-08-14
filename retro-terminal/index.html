@@ -24,12 +24,12 @@
         <div class="time-fields" aria-label="Workday times">
           <label>
             <span>CLOCK-IN</span>
-            <input id="start-time" type="time" value="09:00">
+            <input id="start-time" type="time" step="60" value="09:00">
           </label>
           <span class="arrow" aria-hidden="true">&gt;&gt;</span>
           <label>
             <span>CLOCK-OUT</span>
-            <input id="end-time" type="time" value="18:00">
+            <input id="end-time" type="time" step="60" value="18:00">
           </label>
         </div>
 
@@ -39,7 +39,7 @@
         <div id="results">
           <div class="hero-stat">
             <span class="hero-label">DAY_COMPLETE.VAL</span>
-            <strong id="percent">--.-%</strong>
+            <strong id="percent">--.--%</strong>
             <span id="end-note" class="end-note">CALCULATING FREEDOM…</span>
           </div>
 
