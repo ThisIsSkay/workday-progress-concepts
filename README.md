@@ -21,7 +21,7 @@ clock-in and clock-out time; the display updates once per second.
 | Element | Description |
 | --- | --- |
 | Headline | Reflects shift state: `NOT ON THE CLOCK YET`, `WHEN CAN I LOG OFF`, or `YOU MAY LOG OFF NOW` |
-| Percentage | Progress through the shift, to one decimal place |
+| Percentage | Progress through the shift, to two decimal places |
 | ASCII bar | 24-cell `[####----]` progress bar with an integer percentage |
 | End note | Clock-in time, projected finish time, or the time the shift ended |
 | Stats | Worked, remaining, and total shift duration |
