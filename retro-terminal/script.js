@@ -8,8 +8,24 @@ const srStatus = document.querySelector("#sr-status");
 
 const LONG_SHIFT_MS = 16 * 60 * 60 * 1000; // flag shifts longer than 16h as likely AM/PM typos
 
-startInput.value = localStorage.getItem("workday-start") || "09:00";
-endInput.value = localStorage.getItem("workday-end") || "18:00";
+// A finished day shift stays on screen until midnight simply because the next
+// one starts tomorrow. Give an overnight shift the same courtesy, otherwise it
+// flips to "NOT ON THE CLOCK YET" the moment it ends and the log-off screen is
+// never actually seen.
+const POST_SHIFT_GRACE_MS = 6 * 60 * 60 * 1000;
+
+// Storage throws (not just returns null) when cookies are blocked or the page
+// is in a sandboxed iframe. Never let that take the whole terminal down.
+function readStored(key, fallback) {
+  try {
+    return localStorage.getItem(key) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+startInput.value = readStored("workday-start", "09:00");
+endInput.value = readStored("workday-end", "18:00");
 
 const MESSAGES = [
   [0, "BOOT SEQUENCE INITIATED…"],
@@ -47,14 +63,16 @@ function getShiftBounds(now) {
     const previousEnd = new Date(end);
     previousStart.setDate(previousStart.getDate() - 1);
     previousEnd.setDate(previousEnd.getDate() - 1);
-    if (now <= previousEnd) return { start: previousStart, end: previousEnd };
+    if (now - previousEnd <= POST_SHIFT_GRACE_MS) return { start: previousStart, end: previousEnd };
   }
 
   return { start, end };
 }
 
-function formatDuration(milliseconds) {
-  const totalMinutes = Math.max(0, Math.floor(milliseconds / 60000));
+// WORKED floors while REMAINING ceils, so the two always add up to TOTAL SHIFT
+// instead of reading a minute short for most of the day.
+function formatDuration(milliseconds, round = Math.floor) {
+  const totalMinutes = Math.max(0, round(milliseconds / 60000));
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   return `${hours}h ${String(minutes).padStart(2, "0")}m`;
@@ -68,9 +86,11 @@ function messageFor(progress) {
   return text;
 }
 
+// Every readout floors rather than rounds: rounding let the bar fill up and the
+// counter read 100 several minutes before the shift actually ended.
 function asciiBar(progress, width) {
-  const filled = Math.round((progress / 100) * width);
-  return `[${"#".repeat(filled)}${"-".repeat(width - filled)}] ${String(Math.round(progress)).padStart(3, "0")}%`;
+  const filled = Math.floor((progress / 100) * width);
+  return `[${"#".repeat(filled)}${"-".repeat(width - filled)}] ${String(Math.floor(progress)).padStart(3, "0")}%`;
 }
 
 function update() {
@@ -79,9 +99,14 @@ function update() {
   error.hidden = Boolean(shift);
   results.hidden = !shift;
   if (!shift) {
+    // A half-typed time is not the same mistake as two identical times.
+    error.textContent = startInput.value && endInput.value
+      ? "ERR_0x01: START AND END TIME MUST DIFFER."
+      : "ERR_0x02: ENTER BOTH A CLOCK-IN AND A CLOCK-OUT TIME.";
     warning.hidden = true;
     document.body.classList.remove("complete");
     titleText.textContent = "WHEN CAN I LOG OFF";
+    syncLayout();
     return;
   }
 
@@ -109,30 +134,38 @@ function update() {
 
   const message = messageFor(progress);
 
-  document.querySelector("#percent").textContent = `${progress.toFixed(1)}%`;
+  const wholePercent = Math.floor(progress);
+  document.querySelector("#percent").textContent = `${(Math.floor(progress * 10) / 10).toFixed(1)}%`;
   document.querySelector("#end-note").textContent = complete
     ? `LOGGED OFF · SHIFT ENDED ${endTime}`
     : notStarted
       ? `SHIFT NOT STARTED · CLOCK-IN ${startTime}`
       : `FREEDOM ETA: ${endTime}`;
   document.querySelector("#message").textContent = message;
-  document.querySelector("#progress-count").textContent = `${String(Math.round(progress)).padStart(3, "0")}/100`;
+  document.querySelector("#progress-count").textContent = `${String(wholePercent).padStart(3, "0")}/100`;
   document.querySelector("#ascii-bar").textContent = asciiBar(progress, 24);
-  document.querySelector("#progress-track").setAttribute("aria-valuenow", Math.round(progress));
+  document.querySelector("#progress-track").setAttribute("aria-valuenow", wholePercent);
   document.querySelector("#worked").textContent = formatDuration(worked);
-  document.querySelector("#remaining").textContent = formatDuration(remaining);
+  document.querySelector("#remaining").textContent = formatDuration(remaining, Math.ceil);
   document.querySelector("#duration").textContent = formatDuration(duration);
 
   const milestone = Math.floor(progress / 25) * 25;
   if (milestone !== lastMilestone) {
     lastMilestone = milestone;
-    srStatus.textContent = `${Math.round(progress)} percent complete. ${message}`;
+    srStatus.textContent = `${wholePercent} percent complete. ${message}`;
   }
+
+  syncLayout();
 }
 
 function saveTimes() {
-  localStorage.setItem("workday-start", startInput.value);
-  localStorage.setItem("workday-end", endInput.value);
+  try {
+    localStorage.setItem("workday-start", startInput.value);
+    localStorage.setItem("workday-end", endInput.value);
+  } catch {
+    // Storage unavailable or full — the terminal still runs, it just won't
+    // remember these times next visit.
+  }
   update();
 }
 
@@ -140,29 +173,57 @@ function saveTimes() {
 // on short screens (e.g. 720p laptops). Skipped on narrow phones, where
 // scrolling is natural and shrink-to-fit would make text too small.
 const card = document.querySelector(".crt");
-let appliedZoom = -1;
 function fitToViewport() {
   card.style.zoom = "1";
-  if (window.innerWidth < 700) {
-    appliedZoom = 1;
-    return;
+  if (window.innerWidth < 700) return;
+  // The gutter is main's padding, which is a clamp() and so changes with the
+  // viewport. A hard-coded guess understated it and left the card overflowing
+  // on exactly the 720p screens this exists for, so measure it instead.
+  const shell = getComputedStyle(card.parentElement);
+  const slack = 1; // absorbs sub-pixel rounding
+  const availY = window.innerHeight - parseFloat(shell.paddingTop) - parseFloat(shell.paddingBottom) - slack;
+  const availX = window.innerWidth - parseFloat(shell.paddingLeft) - parseFloat(shell.paddingRight) - slack;
+
+  // The card's padding and type are sized in vh/vw, which grow relative to the
+  // card as it shrinks, so a single pass always lands short. Converge instead.
+  let scale = 1;
+  for (let i = 0; i < 5; i++) {
+    const box = card.getBoundingClientRect();
+    if (!box.height || !box.width) break;
+    const next = Math.min(1, scale * Math.min(availY / box.height, availX / box.width));
+    if (Math.abs(next - scale) < 0.001) break;
+    scale = next;
+    card.style.zoom = scale;
   }
-  const pad = 28; // breathing room around the card
-  const scale = Math.min(
-    1,
-    (window.innerHeight - pad) / card.offsetHeight,
-    (window.innerWidth - pad) / card.offsetWidth,
-  );
-  card.style.zoom = scale;
-  appliedZoom = scale;
 }
+
+// Measuring the card forces a reflow, so only re-fit when something that can
+// change its height changed. The ticking numbers never do.
+let lastLayoutKey = "";
+function syncLayout() {
+  const key = `${results.hidden}|${error.hidden}|${warning.hidden}|${titleText.textContent}`;
+  if (key === lastLayoutKey) return;
+  lastLayoutKey = key;
+  fitToViewport();
+}
+
+let resizeQueued = false;
+window.addEventListener("resize", () => {
+  if (resizeQueued) return;
+  resizeQueued = true;
+  requestAnimationFrame(() => {
+    resizeQueued = false;
+    fitToViewport();
+  });
+});
+
+// Timers are throttled in background tabs and stop entirely while a device
+// sleeps, so catch up as soon as the terminal is on screen again.
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) update();
+});
 
 startInput.addEventListener("input", saveTimes);
 endInput.addEventListener("input", saveTimes);
-window.addEventListener("resize", fitToViewport);
 update();
-fitToViewport();
-setInterval(() => {
-  update();
-  fitToViewport();
-}, 1000);
+setInterval(update, 1000);
