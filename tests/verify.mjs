@@ -53,12 +53,12 @@ for (const [h, m, s] of [[17, 49, 0], [17, 57, 0], [17, 59, 29], [17, 59, 59]]) 
   const t = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   check(`${t} bar not full   ${r.bar}`, r.bar, (b) => b.includes("-"));
   check(`${t} count not 100  ${r.count}`, r.count, (c) => c !== "100/100");
-  check(`${t} percent < 100  ${r.percent}`, r.percent, (p) => p !== "100.000%");
+  check(`${t} percent < 100  ${r.percent}`, r.percent, (p) => p !== "100.0000%");
 }
 const done = await snap(at(18, 0, 0), "09:00", "18:00");
 check(`18:00:00 bar full      ${done.bar}`, done.bar, (b) => !b.includes("-"));
 check(`18:00:00 count 100/100 ${done.count}`, done.count, "100/100");
-check(`18:00:00 percent 100.000% ${done.percent}`, done.percent, "100.000%");
+check(`18:00:00 percent 100.0000% ${done.percent}`, done.percent, "100.0000%");
 check("18:00:00 title complete", done.title, "YOU MAY LOG OFF NOW");
 
 console.log("\n=== The 1Hz tick still advances the display across the boundary ===");
@@ -66,14 +66,14 @@ const before = await snap(at(17, 59, 58), "09:00", "18:00", 100);
 check(`17:59:58 incomplete (${before.percent} ${before.count})`, before.title, "WHEN CAN I LOG OFF");
 const crossed = await snap(at(17, 59, 58), "09:00", "18:00", 4000);
 check("…+4s of ticks -> flips to complete", crossed.title, "YOU MAY LOG OFF NOW");
-check(`…+4s of ticks -> 100.000% (${crossed.bar})`, crossed.percent, "100.000%");
+check(`…+4s of ticks -> 100.0000% (${crossed.bar})`, crossed.percent, "100.0000%");
 
-console.log("\n=== Thousandths readout floors rather than rounds ===");
+console.log("\n=== Ten-thousandths readout floors rather than rounds ===");
 const almostDone = await snap(at(17, 59, 59), "09:00", "18:00");
-check("17:59:59 still shows 99.xxx%, never 100.000%", almostDone.percent,
-  (p) => /^99\.\d{3}%$/.test(p) && p !== "100.000%");
+check("17:59:59 still shows 99.xxxx%, never 100.0000%", almostDone.percent,
+  (p) => /^99\.\d{4}%$/.test(p) && p !== "100.0000%");
 const quarter = await snap(at(11, 15, 0), "09:00", "18:00");
-check("11:15 -> exact 25.000%", quarter.percent, "25.000%");
+check("11:15 -> exact 25.0000%", quarter.percent, "25.0000%");
 
 console.log("\n=== Selectable percentage refresh rate ===");
 {
@@ -114,7 +114,7 @@ const preShift = await snap(at(7, 0), "09:00", "18:00");
 check("07:00 day shift -> NOT ON THE CLOCK YET", preShift.title, "NOT ON THE CLOCK YET");
 check("07:00 day shift -> no error", preShift.errShown, false);
 const mid = await snap(at(13, 30), "09:00", "18:00");
-check(`13:30 -> 50.000% (${mid.bar})`, mid.percent, "50.000%");
+check(`13:30 -> 50.0000% (${mid.bar})`, mid.percent, "50.0000%");
 check("13:30 -> FREEDOM ETA note", mid.note, (n) => n.startsWith("FREEDOM ETA"));
 check("zoom applied (layout fit ran)", mid.zoom, (z) => z !== "" && z !== undefined);
 
