@@ -7,7 +7,10 @@ time, remaining time, and percentage complete — in a different visual style.
 Every concept is plain HTML, CSS, and JavaScript in a single directory, with no
 build step, no dependencies, and no network calls.
 
-**Live demo:** https://thisisskay.github.io/workday-progress-concepts/retro-terminal/
+**Live demos**
+
+- [retro-terminal](https://thisisskay.github.io/workday-progress-concepts/retro-terminal/) — green phosphor CRT
+- [twinkle-twinkle](https://thisisskay.github.io/workday-progress-concepts/twinkle-twinkle/) — pastel blind-box star
 
 ## Concepts
 
@@ -63,6 +66,40 @@ When the shift completes, the entire terminal switches from green to red.
   without scrolling. Below 700px wide it renders at full size and scrolls
   normally.
 
+### `twinkle-twinkle/` — How I Wonder When You're Done
+
+A designer-toy take on the same shift: a dusk-to-dawn sky with stars that
+twinkle, and a chunky vinyl star character that reacts to how much of the day
+is left. Styled after blind-box collectibles — pastel palette, glossy rounded
+card, and a ten-slot tray of stars that fills like a collection.
+
+**Display**
+
+| Element | Description |
+| --- | --- |
+| Star character | Mood tracks the shift: asleep before clock-in, sleepy under half way, awake past it, delighted once finished |
+| Percentage | Progress to four decimal places, whole number large with the live decimals smaller and dimmer beside it |
+| Rhyme line | Steps through the nursery rhyme as the day passes |
+| Progress bar | Gradient capsule, plus a ten-slot tray that fills a star per 10% |
+| Stats | Worked, left, and whole shift |
+
+The sky lightens from night to dawn as the shift completes, and the star wakes
+up. It makes no sound.
+
+**Shared behaviour**
+
+Uses the same shift model as the retro terminal — overnight shifts, the
+completed-state grace window, daylight-saving validation, floor-not-round
+progress, and the entered-span basis for the long-shift warning. Clock-in and
+clock-out times are stored under the same keys, so both concepts stay in sync.
+
+Each concept keeps its own copy of that logic rather than importing a shared
+module, so it can still be opened straight off disk. `tests/verify-twinkle.mjs`
+re-checks the same invariants here, so the two copies cannot quietly drift.
+
+Only the percentage runs at a higher refresh rate (10 Hz); everything else
+updates once a second.
+
 ## Running locally
 
 Open the concept's `index.html` directly:
@@ -87,6 +124,13 @@ retro-terminal/
   index.html    Markup and static content
   styles.css    CRT styling, responsive rules, completed-shift theme
   script.js     Shift calculation, rendering, persistence, layout fitting
+
+twinkle-twinkle/
+  index.html    Markup, inline SVG star character
+  styles.css    Pastel palette, star moods, sky and completion themes
+  script.js     Shift calculation, star mood, sky seeding, persistence
+
+tests/          Browser checks for both concepts — see tests/README.md
 ```
 
 ## Browser support

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A little star that wonders how long is left of your workday.">
+    <meta name="theme-color" content="#3b2f6b">
+    <title>Twinkle Twinkle — How I Wonder When You're Done</title>
+    <link rel="stylesheet" href="styles.css?v=twinkle-v1">
+    <script src="script.js?v=twinkle-v1" defer></script>
+  </head>
+  <body>
+    <div id="sky" class="sky" aria-hidden="true"></div>
+
+    <main>
+      <section class="card" aria-labelledby="page-title">
+        <header class="intro">
+          <p class="eyebrow">★ blind box no. 02</p>
+          <h1 id="page-title"><span id="title-text">how I wonder when you're done</span></h1>
+        </header>
+
+        <div class="times" aria-label="Workday times">
+          <label>
+            <span>clock in</span>
+            <input id="start-time" type="time" step="60" value="09:00">
+          </label>
+          <label>
+            <span>clock out</span>
+            <input id="end-time" type="time" step="60" value="18:00">
+          </label>
+        </div>
+
+        <p id="error" class="error" role="alert" hidden></p>
+        <p id="warning" class="warning" role="status" hidden></p>
+
+        <div id="results">
+          <div class="stage">
+            <div class="sparkles" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <svg id="star" class="star" viewBox="0 0 200 200" role="img" aria-labelledby="star-label" data-mood="asleep">
+              <title id="star-label">A little star</title>
+              <path class="star-body"
+                d="M100 28 L117.6 75.7 L168.5 77.8 L128.5 109.3 L142.3 158.2 L100 130 L57.7 158.2 L71.5 109.3 L31.5 77.8 L82.4 75.7 Z"/>
+              <g class="face">
+                <g class="blush">
+                  <ellipse cx="76" cy="107" rx="9" ry="6"/>
+                  <ellipse cx="124" cy="107" rx="9" ry="6"/>
+                </g>
+                <g class="eyes-closed">
+                  <path d="M79 95 q6 7 12 0"/>
+                  <path d="M109 95 q6 7 12 0"/>
+                </g>
+                <g class="eyes-open">
+                  <ellipse cx="85" cy="95" rx="5.5" ry="7"/>
+                  <ellipse cx="115" cy="95" rx="5.5" ry="7"/>
+                </g>
+                <g class="eyes-happy">
+                  <path d="M79 98 q6 -8 12 0"/>
+                  <path d="M109 98 q6 -8 12 0"/>
+                </g>
+                <path class="mouth-small" d="M94 110 q6 5 12 0"/>
+                <path class="mouth-wide" d="M90 108 q10 12 20 0 z"/>
+              </g>
+              <g class="zzz" aria-hidden="true">
+                <text x="150" y="52">z</text>
+                <text x="166" y="38">z</text>
+              </g>
+            </svg>
+            <p id="mood-note" class="mood-note">up above the world so high</p>
+          </div>
+
+          <div class="readout">
+            <strong id="percent" class="percent"><span class="pct-int">--</span><span class="pct-dec">.--</span><span class="pct-sign">%</span></strong>
+            <p id="end-note" class="end-note">counting the minutes…</p>
+          </div>
+
+          <div class="progress-wrap">
+            <div id="progress-track" class="track" role="progressbar" aria-label="Workday completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div id="progress-fill" class="fill"></div>
+            </div>
+            <div class="tray" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <p id="sr-status" class="sr-only" role="status" aria-live="polite"></p>
+          </div>
+
+          <dl class="stats">
+            <div><dt>worked</dt><dd id="worked">--h --m</dd></div>
+            <div><dt>left</dt><dd id="remaining">--h --m</dd></div>
+            <div><dt>whole shift</dt><dd id="duration">--h --m</dd></div>
+          </dl>
+        </div>
+
+        <footer>saved on this device only · nothing leaves your browser</footer>
+      </section>
+    </main>
+  </body>
+</html>

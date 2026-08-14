@@ -15,7 +15,9 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 PORT="${PORT:-8781}"
+TWINKLE_PORT="${TWINKLE_PORT:-8795}"
 export BASE_URL="http://127.0.0.1:${PORT}"
+export TWINKLE_URL="http://127.0.0.1:${TWINKLE_PORT}"
 
 if [ ! -e tests/node_modules ] && [ -d "$(npm root -g)/playwright" ]; then
   ln -sfn "$(npm root -g)" tests/node_modules
@@ -23,15 +25,18 @@ fi
 
 npx --yes http-server retro-terminal -p "$PORT" -s >/dev/null 2>&1 &
 SERVER=$!
-trap 'kill $SERVER 2>/dev/null' EXIT
+npx --yes http-server twinkle-twinkle -p "$TWINKLE_PORT" -s >/dev/null 2>&1 &
+TWINKLE_SERVER=$!
+trap 'kill $SERVER $TWINKLE_SERVER 2>/dev/null' EXIT
 
 for _ in $(seq 1 30); do
-  curl -sf -o /dev/null "$BASE_URL/index.html" && break
+  curl -sf -o /dev/null "$BASE_URL/index.html" \
+    && curl -sf -o /dev/null "$TWINKLE_URL/index.html" && break
   sleep 0.5
 done
 
 FAILED=0
-for suite in verify verify-dst verify-storage sums sweep; do
+for suite in verify verify-dst verify-storage sums sweep verify-twinkle; do
   echo "=============================== $suite"
   node "tests/$suite.mjs" || FAILED=1
 done
