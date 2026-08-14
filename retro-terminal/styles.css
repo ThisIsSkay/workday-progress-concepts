@@ -147,7 +147,7 @@ input[type="time"]:focus-visible {
   grid-template-rows: auto auto;
   align-items: center;
   justify-content: center;
-  column-gap: .04em;
+  column-gap: .02em;
   margin: 4px 0;
   font-size: clamp(44px, min(13vw, 12vh), 84px);
   line-height: .86;
@@ -173,13 +173,11 @@ input[type="time"]:focus-visible {
 
 .percent-sign {
   grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-row: 1;
   align-self: center;
-  font-size: 1.28em;
-  line-height: .82;
+  font-size: 1em;
+  line-height: .86;
   color: var(--phosphor);
-  transform: translateY(.07em) scaleY(1.32);
-  transform-origin: center;
 }
 
 .end-note { color: var(--phosphor-dim); font-size: 13px; }
