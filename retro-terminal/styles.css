@@ -175,9 +175,11 @@ input[type="time"]:focus-visible {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
-  font-size: 1.08em;
+  font-size: 1.28em;
   line-height: .82;
   color: var(--phosphor);
+  transform: translateY(.07em) scaleY(1.32);
+  transform-origin: center;
 }
 
 .end-note { color: var(--phosphor-dim); font-size: 13px; }
