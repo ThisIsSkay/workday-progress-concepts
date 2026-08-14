@@ -54,6 +54,7 @@ const storedRefreshHz = Number(readStored("workday-refresh-hz", String(DEFAULT_R
 let refreshHz = REFRESH_RATES.includes(storedRefreshHz) ? storedRefreshHz : DEFAULT_REFRESH_HZ;
 let percentTimer = null;
 let currentShift = null;
+let lastPercentHtml = "";
 
 const MESSAGES = [
   [0, "BOOT SEQUENCE INITIATED…"],
@@ -149,9 +150,15 @@ function progressForShift(shift, now) {
 }
 
 function renderPercent(progress) {
-  // Floor to thousandths so a normal workday visibly advances on every 1Hz
-  // tick without ever displaying 100.000% before the shift has actually ended.
-  percentText.textContent = `${(Math.floor(progress * 1000) / 1000).toFixed(3)}%`;
+  // Floor to thousandths so the readout can visibly move without ever showing
+  // 100.000% before the shift has actually ended. The fast-moving .000 portion
+  // is deliberately smaller and dimmer so it reads as activity, not noise.
+  const formatted = (Math.floor(progress * 1000) / 1000).toFixed(3);
+  const [whole, fraction] = formatted.split(".");
+  const html = `${whole}<span class="percent-fraction">.${fraction}</span>%`;
+  if (html === lastPercentHtml) return;
+  lastPercentHtml = html;
+  percentText.innerHTML = html;
 }
 
 // The rest of the terminal remains on its original 1Hz update loop. Higher

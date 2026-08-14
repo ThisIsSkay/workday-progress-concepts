@@ -148,6 +148,13 @@ input[type="time"]:focus-visible {
   text-shadow: 0 0 14px rgba(77, 255, 122, .6);
 }
 
+.percent-fraction {
+  display: inline-block;
+  font-size: .62em;
+  color: var(--phosphor-dim);
+  text-shadow: none;
+}
+
 .end-note { color: var(--phosphor-dim); font-size: 13px; }
 
 .progress-labels {
