@@ -151,11 +151,11 @@ function progressForShift(shift, now) {
 
 function renderPercent(progress) {
   // Floor to thousandths so the readout can visibly move without ever showing
-  // 100.000% before the shift has actually ended. The fast-moving .000 portion
-  // is deliberately smaller and dimmer so it reads as activity, not noise.
+  // 100.000% before the shift has actually ended. The whole number stays large,
+  // the live .000 sits underneath it, and the percent sign spans the stack.
   const formatted = (Math.floor(progress * 1000) / 1000).toFixed(3);
   const [whole, fraction] = formatted.split(".");
-  const html = `${whole}<span class="percent-fraction">.${fraction}</span>%`;
+  const html = `<span class="percent-whole">${whole}</span><span class="percent-fraction">.${fraction}</span><span class="percent-sign">%</span>`;
   if (html === lastPercentHtml) return;
   lastPercentHtml = html;
   percentText.innerHTML = html;
