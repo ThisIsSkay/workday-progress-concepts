@@ -22,7 +22,7 @@ the large percentage can be refreshed at 1, 5, 10, or 30 Hz.
 | Element | Description |
 | --- | --- |
 | Headline | Reflects shift state: `NOT ON THE CLOCK YET`, `WHEN CAN I LOG OFF`, or `YOU MAY LOG OFF NOW` |
-| Percentage | Progress through the shift, to three decimal places, with a user-selectable 1/5/10/30 Hz refresh rate |
+| Percentage | Progress through the shift, to four decimal places, with a user-selectable 1/5/10/30 Hz refresh rate |
 | ASCII bar | 24-cell `[####----]` progress bar with an integer percentage |
 | End note | Clock-in time, projected finish time, or the time the shift ended |
 | Stats | Worked, remaining, and total shift duration |
