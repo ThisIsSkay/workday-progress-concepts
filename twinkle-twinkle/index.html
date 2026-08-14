@@ -6,11 +6,75 @@
     <meta name="description" content="A little star that wonders how long is left of your workday.">
     <meta name="theme-color" content="#3b2f6b">
     <title>Twinkle Twinkle — How I Wonder When You're Done</title>
-    <link rel="stylesheet" href="styles.css?v=twinkle-v1">
-    <script src="script.js?v=twinkle-v1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=twinkle-v2">
+    <script src="script.js?v=twinkle-v2" defer></script>
   </head>
   <body>
-    <div id="sky" class="sky" aria-hidden="true"></div>
+    <!-- Everything in here is decoration. None of it carries meaning that is
+         not also written out in the card below. -->
+    <div class="sky" aria-hidden="true">
+      <div id="starfield" class="starfield"></div>
+
+      <svg class="moon" viewBox="0 0 100 100">
+        <circle class="moon-body" cx="50" cy="50" r="40"/>
+        <g class="moon-craters">
+          <circle cx="28" cy="27" r="6"/>
+          <circle cx="77" cy="68" r="7.5"/>
+          <circle cx="74" cy="30" r="4"/>
+        </g>
+        <g class="moon-face">
+          <path d="M33 47 q6 7 12 0"/>
+          <path d="M55 47 q6 7 12 0"/>
+          <path d="M44 62 q6 5 12 0"/>
+        </g>
+      </svg>
+
+      <svg class="sun" viewBox="0 0 120 120">
+        <g class="sun-rays">
+          <path d="M60 2 L66 20 L54 20 Z"/><path d="M60 118 L54 100 L66 100 Z"/>
+          <path d="M2 60 L20 54 L20 66 Z"/><path d="M118 60 L100 66 L100 54 Z"/>
+          <path d="M19 19 L34 27 L27 34 Z"/><path d="M101 101 L86 93 L93 86 Z"/>
+          <path d="M101 19 L93 34 L86 27 Z"/><path d="M19 101 L27 86 L34 93 Z"/>
+        </g>
+        <circle class="sun-body" cx="60" cy="60" r="34"/>
+        <g class="sun-face">
+          <ellipse cx="49" cy="55" rx="4" ry="5"/>
+          <ellipse cx="71" cy="55" rx="4" ry="5"/>
+          <path class="sun-smile" d="M50 68 q10 10 20 0 z"/>
+        </g>
+      </svg>
+
+      <div class="clouds">
+        <svg class="cloud cloud-a" viewBox="0 0 120 70"><use href="#cloud-shape"/></svg>
+        <svg class="cloud cloud-b" viewBox="0 0 120 70"><use href="#cloud-shape"/></svg>
+        <svg class="cloud cloud-c" viewBox="0 0 120 70"><use href="#cloud-shape"/></svg>
+      </div>
+
+      <span class="shooter shooter-a"></span>
+      <span class="shooter shooter-b"></span>
+
+      <div class="confetti">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- Defined once, drawn three times by the clouds above. -->
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+      <g id="cloud-shape">
+        <g class="cloud-body">
+          <ellipse cx="34" cy="42" rx="20" ry="16"/>
+          <ellipse cx="60" cy="32" rx="26" ry="22"/>
+          <ellipse cx="88" cy="44" rx="19" ry="15"/>
+          <rect x="14" y="40" width="92" height="20" rx="10"/>
+        </g>
+        <g class="cloud-face">
+          <ellipse cx="50" cy="38" rx="3.4" ry="4.2"/>
+          <ellipse cx="70" cy="38" rx="3.4" ry="4.2"/>
+          <path d="M55 47 q5 5 10 0"/>
+        </g>
+      </g>
+    </svg>
 
     <main>
       <section class="card" aria-labelledby="page-title">
@@ -35,9 +99,19 @@
 
         <div id="results">
           <div class="stage">
+            <div class="companions" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+
+            <svg id="diamond" class="diamond" viewBox="0 0 60 60" aria-hidden="true">
+              <path class="diamond-body" d="M30 4 L52 24 L30 56 L8 24 Z"/>
+              <path class="diamond-shine" d="M30 4 L52 24 L30 24 Z"/>
+            </svg>
+
             <div class="sparkles" aria-hidden="true">
               <span></span><span></span><span></span><span></span><span></span><span></span>
             </div>
+
             <svg id="star" class="star" viewBox="0 0 200 200" role="img" aria-labelledby="star-label" data-mood="asleep">
               <title id="star-label">A little star</title>
               <path class="star-body"
@@ -63,10 +137,12 @@
                 <path class="mouth-wide" d="M90 108 q10 12 20 0 z"/>
               </g>
               <g class="zzz" aria-hidden="true">
-                <text x="150" y="52">z</text>
-                <text x="166" y="38">z</text>
+                <text x="146" y="56">z</text>
+                <text x="164" y="42">z</text>
+                <text x="180" y="30">z</text>
               </g>
             </svg>
+
             <p id="mood-note" class="mood-note">up above the world so high</p>
           </div>
 

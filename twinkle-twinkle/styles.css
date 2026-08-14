@@ -56,6 +56,163 @@ body {
   overflow: hidden;
 }
 
+.starfield { position: absolute; inset: 0; }
+
+/* --- moon, awake all night, gone by dawn --- */
+
+.moon {
+  position: absolute;
+  top: 7%;
+  left: 7%;
+  width: clamp(52px, 8vw, 88px);
+  /* The glow spills past the viewBox; without this the SVG viewport clips it
+     into a visible square halo. */
+  overflow: visible;
+  opacity: .95;
+  animation: drift-moon 14s ease-in-out infinite;
+  transition: opacity 1.4s ease, transform 1.8s var(--ease);
+}
+
+.moon-body { fill: #fff5cf; filter: drop-shadow(0 0 16px rgba(255, 245, 207, .55)); }
+.moon-craters circle { fill: #f0e0ae; }
+
+.moon-face path {
+  fill: none;
+  stroke: #b9a27a;
+  stroke-width: 3.6;
+  stroke-linecap: round;
+}
+
+/* Dawn: the moon slips away and the sun climbs into its place. */
+body.complete .moon { opacity: 0; transform: translateY(28px) scale(.85); }
+
+@keyframes drift-moon {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50%      { transform: translateY(-12px) rotate(4deg); }
+}
+
+/* --- sun, only at knock-off time --- */
+
+.sun {
+  position: absolute;
+  top: 6%;
+  right: 8%;
+  width: clamp(60px, 9vw, 104px);
+  opacity: 0;
+  transform: translateY(40px) scale(.7);
+  transition: opacity 1.4s ease, transform 1.8s var(--ease);
+}
+
+body.complete .sun { opacity: 1; transform: translateY(0) scale(1); }
+
+.sun-body { fill: #ffd471; }
+.sun-rays { fill: #ffc24d; transform-origin: 60px 60px; animation: spin 26s linear infinite; }
+.sun-face ellipse { fill: #a8703a; }
+.sun-smile { fill: #a8703a; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* --- cloud buddies, drifting past at three depths --- */
+
+.cloud {
+  position: absolute;
+  width: clamp(74px, 13vw, 150px);
+  opacity: .5;
+  will-change: transform;
+}
+
+.cloud-body ellipse, .cloud-body rect { fill: #fff; }
+.cloud-face ellipse { fill: #9a86bd; }
+.cloud-face path { fill: none; stroke: #9a86bd; stroke-width: 2.6; stroke-linecap: round; }
+
+/* Start fully off the left edge and end fully off the right, so a cloud is
+   never seen popping into existence. */
+.cloud-a { top: 16%; opacity: .55; animation: sail 48s linear infinite; }
+.cloud-b { top: 38%; opacity: .38; width: clamp(56px, 9vw, 108px); animation: sail 76s linear -22s infinite; }
+.cloud-c { top: 62%; opacity: .3;  width: clamp(90px, 16vw, 178px); animation: sail 104s linear -60s infinite; }
+
+@keyframes sail {
+  from { transform: translateX(-30vw); }
+  to   { transform: translateX(130vw); }
+}
+
+/* --- shooting stars: rare enough to feel like an event --- */
+
+.shooter {
+  position: absolute;
+  width: 120px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff);
+  opacity: 0;
+  animation: shoot 13s ease-in infinite;
+}
+
+.shooter::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, .9);
+}
+
+.shooter-a { top: 12%; left: -14%; }
+.shooter-b { top: 30%; left: -14%; animation-duration: 19s; animation-delay: -8s; }
+
+@keyframes shoot {
+  0%      { transform: translate(0, 0) rotate(18deg); opacity: 0; }
+  3%      { opacity: 1; }
+  14%     { transform: translate(78vw, 26vh) rotate(18deg); opacity: 0; }
+  100%    { transform: translate(78vw, 26vh) rotate(18deg); opacity: 0; }
+}
+
+/* --- confetti, only once the day is done --- */
+
+.confetti { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; }
+body.complete .confetti { opacity: 1; }
+
+.confetti span {
+  position: absolute;
+  top: -6%;
+  width: 9px;
+  height: 13px;
+  border-radius: 2px;
+  opacity: 0;
+}
+
+body.complete .confetti span { animation: fall 6.5s linear infinite; }
+
+.confetti span:nth-child(6n+1) { background: #ff8fb1; }
+.confetti span:nth-child(6n+2) { background: #ffd071; }
+.confetti span:nth-child(6n+3) { background: #7fd6c0; }
+.confetti span:nth-child(6n+4) { background: #b9a0e8; }
+.confetti span:nth-child(6n+5) { background: #fff2b8; border-radius: 50%; }
+.confetti span:nth-child(6n+6) { background: #ffb3c8; border-radius: 50%; }
+
+.confetti span:nth-child(1)  { left: 6%;  animation-delay: 0s; }
+.confetti span:nth-child(2)  { left: 15%; animation-delay: 1.4s; }
+.confetti span:nth-child(3)  { left: 24%; animation-delay: 2.9s; }
+.confetti span:nth-child(4)  { left: 33%; animation-delay: .7s; }
+.confetti span:nth-child(5)  { left: 42%; animation-delay: 3.6s; }
+.confetti span:nth-child(6)  { left: 51%; animation-delay: 2.1s; }
+.confetti span:nth-child(7)  { left: 60%; animation-delay: 4.4s; }
+.confetti span:nth-child(8)  { left: 69%; animation-delay: 1s; }
+.confetti span:nth-child(9)  { left: 78%; animation-delay: 3.2s; }
+.confetti span:nth-child(10) { left: 86%; animation-delay: 5.1s; }
+.confetti span:nth-child(11) { left: 93%; animation-delay: 2.5s; }
+.confetti span:nth-child(12) { left: 71%; animation-delay: 5.8s; }
+
+@keyframes fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  8%   { opacity: .95; }
+  90%  { opacity: .95; }
+  100% { transform: translateY(112vh) rotate(520deg); opacity: 0; }
+}
+
 .sky i {
   position: absolute;
   display: block;
@@ -208,10 +365,99 @@ body.complete .star-body {
 .blush ellipse { fill: var(--candy); opacity: .55; }
 
 .zzz text {
-  fill: #fff;
-  font-size: 22px;
+  /* Sits on the cream card, not the night sky — white was invisible here. */
+  fill: var(--lilac);
+  font-size: 24px;
   font-weight: 800;
-  opacity: .85;
+  opacity: 0;
+  animation: snooze 3.6s ease-out infinite;
+}
+
+.zzz text:nth-child(2) { animation-delay: 1.2s; }
+.zzz text:nth-child(3) { animation-delay: 2.4s; }
+
+@keyframes snooze {
+  0%   { opacity: 0; transform: translate(0, 6px) scale(.6); }
+  30%  { opacity: .9; }
+  100% { opacity: 0; transform: translate(14px, -22px) scale(1.15); }
+}
+
+/* A blink every few seconds is the cheapest thing that makes a face feel
+   alive. Only while the eyes are actually open. */
+.star[data-mood="awake"] .eyes-open ellipse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blink 5.2s ease-in-out infinite;
+}
+
+.star[data-mood="awake"] .eyes-open ellipse:nth-child(2) { animation-delay: .04s; }
+
+@keyframes blink {
+  0%, 91%, 100% { transform: scaleY(1); }
+  94%           { transform: scaleY(.08); }
+  97%           { transform: scaleY(1); }
+}
+
+/* Crossing a quarter of the day earns a little hop. */
+.star.cheer { animation: cheer .9s var(--ease); }
+
+@keyframes cheer {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); }
+  30%  { transform: translateY(-18px) rotate(-9deg) scale(1.07); }
+  55%  { transform: translateY(0) rotate(7deg) scale(.97); }
+  75%  { transform: translateY(-7px) rotate(-3deg) scale(1.02); }
+  100% { transform: translateY(0) rotate(0deg) scale(1); }
+}
+
+/* --- little friends drifting around the big star --- */
+
+/* Bounded to the star's own area. Left to cover the whole stage, a friend
+   drifted down onto the rhyme line and sat in the middle of the text. */
+.companions { position: absolute; inset: -6% -12% 26%; pointer-events: none; }
+
+.companions span {
+  position: absolute;
+  background: linear-gradient(160deg, #fff0b8, var(--butter));
+  clip-path: polygon(50% 2%, 61% 36%, 97% 36%, 68% 58%, 79% 92%, 50% 71%, 21% 92%, 32% 58%, 3% 36%, 39% 36%);
+  animation: float-friend 6.5s ease-in-out infinite;
+}
+
+.companions span:nth-child(1) { width: 26px; height: 26px; top: 14%; left: 1%;  animation-delay: 0s; }
+.companions span:nth-child(2) { width: 17px; height: 17px; top: 54%; left: 93%; animation-delay: 1.9s; }
+.companions span:nth-child(3) { width: 13px; height: 13px; top: 78%; left: 8%;  animation-delay: 3.7s; }
+
+@keyframes float-friend {
+  0%, 100% { transform: translateY(0) rotate(-8deg); opacity: .55; }
+  50%      { transform: translateY(-14px) rotate(10deg); opacity: 1; }
+}
+
+/* --- "like a diamond in the sky": shows up on cue at 75% --- */
+
+/* Clear of the star's top point: overlapping it, the star's own drop-shadow
+   layer painted over the gem and cut it in half. */
+.diamond {
+  position: absolute;
+  top: -14%;
+  left: 50%;
+  width: 32px;
+  margin-left: -16px;
+  opacity: 0;
+  transform: translateY(10px) scale(.5);
+  transition: opacity .6s ease, transform .7s var(--ease);
+}
+
+.diamond.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  animation: gem 3.4s ease-in-out infinite;
+}
+
+.diamond-body { fill: #8fe3f0; }
+.diamond-shine { fill: #d6f7fd; }
+
+@keyframes gem {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50%      { transform: translateY(-9px) rotate(6deg); }
 }
 
 /* Mood switching: exactly one eye set and one mouth visible at a time. */
@@ -320,11 +566,29 @@ body.complete .sparkles { opacity: 1; }
 }
 
 .fill {
+  position: relative;
   width: 0;
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--lilac), var(--candy) 55%, var(--butter));
   transition: width .35s linear;
+  overflow: hidden;
+}
+
+/* A gloss travelling along the filled part, so the bar reads as awake even
+   when the number is barely moving. */
+.fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, .75) 50%, transparent 80%);
+  transform: translateX(-100%);
+  animation: sheen 3.2s ease-in-out infinite;
+}
+
+@keyframes sheen {
+  0%       { transform: translateX(-100%); }
+  55%, 100% { transform: translateX(100%); }
 }
 
 .tray {
@@ -345,6 +609,15 @@ body.complete .sparkles { opacity: 1; }
 .tray span.on {
   background: linear-gradient(160deg, var(--butter), var(--candy));
   transform: scale(1.12);
+  /* Plays once, when the class lands — collecting one should feel like a
+     little prize rather than a silent state change. */
+  animation: collect .55s var(--ease);
+}
+
+@keyframes collect {
+  0%   { transform: scale(1) rotate(0deg); }
+  45%  { transform: scale(1.5) rotate(18deg); }
+  100% { transform: scale(1.12) rotate(0deg); }
 }
 
 /* --- stats --- */
@@ -422,9 +695,30 @@ footer {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sky i, .star, .sparkles span { animation: none; }
-  .fill, .tray span { transition: none; }
-  .sparkles span { opacity: 1; transform: scale(1); }
+  .sky i, .star, .star.cheer, .sparkles span, .moon, .sun-rays, .cloud,
+  .zzz text, .companions span, .diamond.show, .tray span.on,
+  .star[data-mood="awake"] .eyes-open ellipse, .fill::after {
+    animation: none;
+  }
+
+  .fill, .tray span, .diamond, .moon, .sun { transition: none; }
+
+  /* Anything whose animation was its only source of visibility needs an
+     explicit resting state, or it silently disappears here. */
+  .sparkles span { opacity: 1; transform: scale(1) rotate(45deg); }
+  .zzz text { opacity: .85; }
+  .companions span { opacity: 1; }
+  .fill::after { display: none; }
+
+  /* Clouds park in a spread rather than stacking at the left edge, which is
+     where the animation's start frame would leave them. */
+  .cloud-a { transform: translateX(10vw); }
+  .cloud-b { transform: translateX(54vw); }
+  .cloud-c { transform: translateX(76vw); }
+
+  /* Motion is the whole point of these two; there is no still version worth
+     showing. */
+  .shooter, .confetti { display: none; }
 }
 
 @media (prefers-contrast: more) {

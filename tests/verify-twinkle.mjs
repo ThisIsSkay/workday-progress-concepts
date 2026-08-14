@@ -162,6 +162,91 @@ console.log("\n=== The fast percentage ticker must not outrun the rest of the pa
   await ctx.close();
 }
 
+console.log("\n=== Decoration must never take the page down ===");
+{
+  // A renamed selector once made the sky seeder throw, which killed the whole
+  // script before a single number was drawn. Nothing rendered, and every
+  // behavioural assertion above would still have looked fine in isolation.
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.clock.install({ time: at(13, 30) });
+  await page.goto(URL);
+  await page.clock.runFor(150);
+  check("no uncaught page errors on load", errors, (e) => e.length === 0);
+  const live = await page.evaluate(() => ({
+    seeded: document.querySelectorAll("#starfield i").length,
+    percent: document.querySelector("#percent").textContent,
+  }));
+  check(`the sky actually got seeded (${live.seeded} stars)`, live.seeded, (n) => n > 20);
+  check("…and the clock still rendered", live.percent, (p) => /^\d/.test(p));
+  await ctx.close();
+}
+
+console.log("\n=== Sky characters follow the shift ===");
+async function skyAt(when) {
+  const ctx = await browser.newContext();
+  await ctx.addInitScript(() => {
+    localStorage.setItem("workday-start", "09:00");
+    localStorage.setItem("workday-end", "18:00");
+  });
+  const page = await ctx.newPage();
+  await page.clock.install({ time: when });
+  await page.goto(URL);
+  await page.clock.runFor(150);
+  await page.waitForTimeout(1800); // let the moon/sun cross-fade finish
+  const out = await page.evaluate(() => ({
+    moon: +getComputedStyle(document.querySelector(".moon")).opacity,
+    sun: +getComputedStyle(document.querySelector(".sun")).opacity,
+    diamond: document.querySelector("#diamond").classList.contains("show"),
+  }));
+  await ctx.close();
+  return out;
+}
+const night = await skyAt(at(13, 30));
+check(`mid-shift the moon is out (${night.moon})`, night.moon, (v) => v > 0.8);
+check(`mid-shift the sun is not (${night.sun})`, night.sun, (v) => v < 0.05);
+check("mid-shift no diamond yet", night.diamond, false);
+const gem = await skyAt(at(16, 30));
+check("past 75% the diamond appears", gem.diamond, true);
+const dawn = await skyAt(at(18, 5));
+check(`at knock-off the moon has set (${dawn.moon})`, dawn.moon, (v) => v < 0.05);
+check(`…and the sun is up (${dawn.sun})`, dawn.sun, (v) => v > 0.8);
+
+console.log("\n=== prefers-reduced-motion turns the motion off without hiding things ===");
+{
+  const ctx = await browser.newContext({ reducedMotion: "reduce" });
+  await ctx.addInitScript(() => {
+    localStorage.setItem("workday-start", "09:00");
+    localStorage.setItem("workday-end", "18:00");
+  });
+  const page = await ctx.newPage();
+  await page.clock.install({ time: at(18, 5) });
+  await page.goto(URL);
+  await page.clock.runFor(150);
+  const r = await page.evaluate(() => {
+    const opacityOf = (sel) => +getComputedStyle(document.querySelector(sel)).opacity;
+    return {
+      running: document.getAnimations().filter((a) => a.playState === "running").length,
+      // These are invisible by default and revealed by their animation, so a
+      // blanket `animation: none` would erase them entirely.
+      zzz: opacityOf(".zzz text"),
+      friend: opacityOf(".companions span"),
+      sparkle: opacityOf(".sparkles span"),
+      confetti: getComputedStyle(document.querySelector(".confetti")).display,
+      percent: document.querySelector("#percent").textContent,
+    };
+  });
+  check(`no animations left running (${r.running})`, r.running, 0);
+  check(`the sleeping z stays visible (${r.zzz})`, r.zzz, (v) => v > 0.1);
+  check(`companion stars stay visible (${r.friend})`, r.friend, (v) => v > 0.1);
+  check(`completion sparkles stay visible (${r.sparkle})`, r.sparkle, (v) => v > 0.1);
+  check("confetti is dropped rather than frozen mid-air", r.confetti, "none");
+  check("and the page still works", r.percent, "100.0000%");
+  await ctx.close();
+}
+
 console.log(`\n${fail === 0 ? "ALL GREEN" : "FAILURES PRESENT"} — ${pass} passed, ${fail} failed\n`);
 await browser.close();
 process.exit(fail === 0 ? 0 : 1);

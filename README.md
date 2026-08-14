@@ -83,8 +83,31 @@ card, and a ten-slot tray of stars that fills like a collection.
 | Progress bar | Gradient capsule, plus a ten-slot tray that fills a star per 10% |
 | Stats | Worked, left, and whole shift |
 
+**The cast**
+
+| Character | Behaviour |
+| --- | --- |
+| Little star | Blinks every few seconds once awake, hops when the day passes a quarter mark, floats gently throughout |
+| Moon | Sleepy face, drifts overhead all night, sets as the shift finishes |
+| Sun | Climbs in at knock-off time with slowly turning rays |
+| Cloud buddies | Three of them, sailing past at different speeds and depths |
+| Companion stars | Small friends bobbing around the big one, out of phase |
+| Diamond | Appears at 75%, on the line "like a diamond in the sky" |
+| Shooting stars | Occasional, on long cycles, so they read as an event |
+| Confetti | Falls only once the shift is done |
+
 The sky lightens from night to dawn as the shift completes, and the star wakes
 up. It makes no sound.
+
+All motion is CSS on `transform` and `opacity`, so it stays on the compositor —
+the only JavaScript running faster than once a second is the percentage. Under
+`prefers-reduced-motion: reduce` every animation stops; characters that are
+revealed *by* their animation are given an explicit resting state so they do
+not silently vanish, and the two that are purely motion (shooting stars,
+confetti) are dropped rather than frozen in place.
+
+Everything decorative is `aria-hidden`, and nothing in the scene carries meaning
+that is not also written out in text.
 
 **Shared behaviour**
 

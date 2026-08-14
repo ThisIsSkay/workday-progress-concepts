@@ -8,7 +8,12 @@ const srStatus = document.querySelector("#sr-status");
 const percentEl = document.querySelector("#percent");
 const starEl = document.querySelector("#star");
 const fillEl = document.querySelector("#progress-fill");
+const diamondEl = document.querySelector("#diamond");
 const trayStars = [...document.querySelectorAll(".tray span")];
+
+// "like a diamond in the sky" is the fourth line of the rhyme, so the gem
+// turns up exactly when that line does.
+const DIAMOND_AT = 75;
 
 // The shift model below is shared with the retro-terminal concept. Each concept
 // stays dependency-free so it can be opened straight off disk, which means this
@@ -66,6 +71,7 @@ const MESSAGES = [
 ];
 
 let lastMilestone = -1;
+let cheerTimer = null;
 let currentShift = null;
 let lastPercentInt = null;
 let lastPercentDec = null;
@@ -220,6 +226,7 @@ function update() {
       ? `not started yet · you clock in at ${startTime}`
       : `home time at ${endTime}`);
 
+  diamondEl.classList.toggle("show", progress >= DIAMOND_AT);
   fillEl.style.width = `${progress}%`;
   document.querySelector("#progress-track").setAttribute("aria-valuenow", wholePercent);
   trayStars.forEach((star, i) => star.classList.toggle("on", wholePercent >= (i + 1) * 10));
@@ -230,9 +237,23 @@ function update() {
 
   const milestone = Math.floor(progress / 25) * 25;
   if (milestone !== lastMilestone) {
+    const isFirstPaint = lastMilestone === -1;
     lastMilestone = milestone;
     srStatus.textContent = `${wholePercent} percent through the day. ${message}`;
+    // A hop for reaching a new quarter, but not for merely arriving on the
+    // page part-way through one.
+    if (!isFirstPaint) cheer();
   }
+}
+
+// Restarting a CSS animation needs the class off for a frame, otherwise
+// re-adding it in the same tick does nothing.
+function cheer() {
+  clearTimeout(cheerTimer);
+  starEl.classList.remove("cheer");
+  void starEl.offsetWidth;
+  starEl.classList.add("cheer");
+  cheerTimer = setTimeout(() => starEl.classList.remove("cheer"), 950);
 }
 
 // Only the big number runs fast. Everything else stays on the 1Hz loop, so the
@@ -264,7 +285,8 @@ function saveTimes() {
 // Scatter the backdrop. Positions are random per load so it never looks like a
 // fixed pattern; the twinkle itself is CSS, and stops under reduced motion.
 function seedSky() {
-  const sky = document.querySelector("#sky");
+  const sky = document.querySelector("#starfield");
+  if (!sky) return;
   const fragment = document.createDocumentFragment();
   for (let i = 0; i < 70; i++) {
     const star = document.createElement("i");
@@ -293,7 +315,15 @@ document.addEventListener("visibilitychange", () => {
 startInput.addEventListener("input", saveTimes);
 endInput.addEventListener("input", saveTimes);
 
-seedSky();
 update();
 setInterval(update, 1000);
 setInterval(updateLivePercent, 1000 / PERCENT_HZ);
+
+// Decoration comes last and cannot take the page down with it. Seeding the sky
+// first once threw on a renamed selector and killed the whole script before a
+// single number had been drawn.
+try {
+  seedSky();
+} catch {
+  // A missing backdrop is not worth losing the clock over.
+}
