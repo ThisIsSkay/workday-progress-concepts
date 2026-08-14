@@ -6,7 +6,18 @@ const warning = document.querySelector("#warning");
 const titleText = document.querySelector("#title-text");
 const srStatus = document.querySelector("#sr-status");
 
-const LONG_SHIFT_MS = 16 * 60 * 60 * 1000; // flag shifts longer than 16h as likely AM/PM typos
+const LONG_SHIFT_MINUTES = 16 * 60; // flag shifts longer than 16h as likely AM/PM typos
+
+const ERR_IDENTICAL = "ERR_0x01: START AND END TIME MUST DIFFER.";
+const ERR_INCOMPLETE = "ERR_0x02: ENTER BOTH A CLOCK-IN AND A CLOCK-OUT TIME.";
+const ERR_CLOCK_CHANGE = "ERR_0x03: THAT LOCAL TIME DOES NOT EXIST — DAYLIGHT SAVING CHANGE.";
+
+// Assigning textContent replaces the text node even when the string is
+// unchanged, and that mutation is what a live region announces. #error is
+// role="alert", so rewriting it on every 1Hz tick re-announces it every second.
+function setText(el, text) {
+  if (el.textContent !== text) el.textContent = text;
+}
 
 // A finished day shift stays on screen until midnight simply because the next
 // one starts tomorrow. Give an overnight shift the same courtesy, otherwise it
@@ -24,8 +35,16 @@ function readStored(key, fallback) {
   }
 }
 
-startInput.value = readStored("workday-start", "09:00");
-endInput.value = readStored("workday-end", "18:00");
+// A stored value the control rejects is sanitised to "" (anything malformed) or
+// kept but silently truncated by the parser (a value carrying seconds, which
+// the minute-granular UI would misread). Fall back rather than trust it.
+function restoreTime(input, key, fallback) {
+  input.value = readStored(key, fallback);
+  if (!input.value || !input.validity.valid) input.value = fallback;
+}
+
+restoreTime(startInput, "workday-start", "09:00");
+restoreTime(endInput, "workday-end", "18:00");
 
 const MESSAGES = [
   [0, "BOOT SEQUENCE INITIATED…"],
@@ -45,10 +64,26 @@ function minutesFromTime(value) {
   return hours * 60 + minutes;
 }
 
+// setHours() resolves a local time that does not exist — the hour skipped on a
+// spring-forward morning — by rolling it forward, so an entered 02:30 quietly
+// becomes 03:30. That reports a clock-in nobody typed, and if both ends land on
+// the same instant the shift collapses to zero length and progress goes NaN.
+// Verify the wall clock we asked for is the wall clock we got.
+function validateShift(shift, startMinutes, endMinutes, wallSpanMinutes) {
+  const wallMinutes = (date) => date.getHours() * 60 + date.getMinutes();
+  const intact = wallMinutes(shift.start) === startMinutes && wallMinutes(shift.end) === endMinutes;
+  if (!intact || shift.end <= shift.start) return { error: ERR_CLOCK_CHANGE };
+  return { ...shift, wallSpanMinutes };
+}
+
 function getShiftBounds(now) {
   const startMinutes = minutesFromTime(startInput.value);
   const endMinutes = minutesFromTime(endInput.value);
-  if (startMinutes === null || endMinutes === null || startMinutes === endMinutes) return null;
+  if (startMinutes === null || endMinutes === null) return { error: ERR_INCOMPLETE };
+  if (startMinutes === endMinutes) return { error: ERR_IDENTICAL };
+
+  // What the user typed, independent of any clock change the shift may cross.
+  const wallSpanMinutes = (endMinutes - startMinutes + 1440) % 1440;
 
   const start = new Date(now);
   start.setHours(Math.floor(startMinutes / 60), startMinutes % 60, 0, 0);
@@ -56,17 +91,22 @@ function getShiftBounds(now) {
   end.setHours(Math.floor(endMinutes / 60), endMinutes % 60, 0, 0);
 
   const isOvernight = endMinutes < startMinutes;
-  if (isOvernight) end.setDate(end.getDate() + 1);
 
+  // Resolve the just-finished shift *before* rolling `end` forward a day.
+  // Rolling first and subtracting a day afterwards inherits tomorrow's DST
+  // adjustment, which moves an end time that never crossed a clock change.
   if (isOvernight && now < start) {
     const previousStart = new Date(start);
-    const previousEnd = new Date(end);
     previousStart.setDate(previousStart.getDate() - 1);
-    previousEnd.setDate(previousEnd.getDate() - 1);
-    if (now - previousEnd <= POST_SHIFT_GRACE_MS) return { start: previousStart, end: previousEnd };
+    const previousEnd = new Date(end);
+    if (now - previousEnd <= POST_SHIFT_GRACE_MS) {
+      return validateShift({ start: previousStart, end: previousEnd }, startMinutes, endMinutes, wallSpanMinutes);
+    }
   }
 
-  return { start, end };
+  if (isOvernight) end.setDate(end.getDate() + 1);
+
+  return validateShift({ start, end }, startMinutes, endMinutes, wallSpanMinutes);
 }
 
 // WORKED floors while REMAINING ceils, so the two always add up to TOTAL SHIFT
@@ -96,16 +136,14 @@ function asciiBar(progress, width) {
 function update() {
   const now = new Date();
   const shift = getShiftBounds(now);
-  error.hidden = Boolean(shift);
-  results.hidden = !shift;
-  if (!shift) {
-    // A half-typed time is not the same mistake as two identical times.
-    error.textContent = startInput.value && endInput.value
-      ? "ERR_0x01: START AND END TIME MUST DIFFER."
-      : "ERR_0x02: ENTER BOTH A CLOCK-IN AND A CLOCK-OUT TIME.";
+  const failed = Boolean(shift.error);
+  error.hidden = !failed;
+  results.hidden = failed;
+  if (failed) {
+    setText(error, shift.error);
     warning.hidden = true;
     document.body.classList.remove("complete");
-    titleText.textContent = "WHEN CAN I LOG OFF";
+    setText(titleText, "WHEN CAN I LOG OFF");
     syncLayout();
     return;
   }
@@ -120,14 +158,17 @@ function update() {
 
   document.body.classList.toggle("complete", complete);
 
-  titleText.textContent = complete
+  setText(titleText, complete
     ? "YOU MAY LOG OFF NOW"
     : notStarted
       ? "NOT ON THE CLOCK YET"
-      : "WHEN CAN I LOG OFF";
+      : "WHEN CAN I LOG OFF");
 
-  warning.hidden = duration <= LONG_SHIFT_MS;
-  warning.textContent = `WARN_0x02: SHIFT SPANS ${formatDuration(duration)}. CHECK AM/PM.`;
+  // Typo detection is about what was typed, so measure the entered wall-clock
+  // span. Elapsed time gains or loses an hour across a clock change, which
+  // would flag — or miss — a shift purely because of the date it falls on.
+  warning.hidden = shift.wallSpanMinutes <= LONG_SHIFT_MINUTES;
+  setText(warning, `WARN_0x02: SHIFT SPANS ${formatDuration(shift.wallSpanMinutes * 60000)}. CHECK AM/PM.`);
 
   const endTime = shift.end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   const startTime = shift.start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
@@ -136,12 +177,12 @@ function update() {
 
   const wholePercent = Math.floor(progress);
   document.querySelector("#percent").textContent = `${(Math.floor(progress * 10) / 10).toFixed(1)}%`;
-  document.querySelector("#end-note").textContent = complete
+  setText(document.querySelector("#end-note"), complete
     ? `LOGGED OFF · SHIFT ENDED ${endTime}`
     : notStarted
       ? `SHIFT NOT STARTED · CLOCK-IN ${startTime}`
-      : `FREEDOM ETA: ${endTime}`;
-  document.querySelector("#message").textContent = message;
+      : `FREEDOM ETA: ${endTime}`);
+  setText(document.querySelector("#message"), message);
   document.querySelector("#progress-count").textContent = `${String(wholePercent).padStart(3, "0")}/100`;
   document.querySelector("#ascii-bar").textContent = asciiBar(progress, 24);
   document.querySelector("#progress-track").setAttribute("aria-valuenow", wholePercent);

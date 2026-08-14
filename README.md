@@ -34,6 +34,11 @@ When the shift completes, the entire terminal switches from green to red.
 - **Overnight shifts** are handled by comparing the two times. If the clock-out
   time is earlier than the clock-in time (for example `22:00` → `06:00`), the
   shift is treated as ending the following day.
+- **Daylight saving changes** are respected. Worked and remaining time reflect
+  real elapsed time, so a shift crossing a clock change is an hour shorter or
+  longer than its entered span. A clock-in or clock-out falling in the hour a
+  spring-forward skips does not exist locally, and is reported rather than
+  silently moved to a time you did not enter.
 - **A finished shift stays on screen.** A day shift remains in its completed
   state until midnight. An overnight shift is held in the completed state for
   six hours after it ends, so the log-off screen is actually visible rather than
@@ -43,10 +48,13 @@ When the shift completes, the entire terminal switches from green to red.
   appearing complete in the final minutes.
 - **Worked and remaining always sum to the total**, by flooring the former and
   rounding the latter up.
-- **Long shifts are flagged.** Anything over 16 hours shows a warning, since it
-  usually means an AM/PM mix-up.
-- **Times are remembered** in `localStorage`. If storage is unavailable, the
-  page still works — it just will not restore your times next visit.
+- **Long shifts are flagged.** An entered span over 16 hours shows a warning,
+  since it usually means an AM/PM mix-up. This measures the times as typed, not
+  elapsed time, so a clock change cannot suppress or trigger the warning.
+- **Times are remembered** in `localStorage`, and are validated on restore so a
+  corrupt or stale value falls back to the default rather than opening the page
+  in an error state. If storage is unavailable, the page still works — it just
+  will not restore your times next visit.
 - **The layout scales to fit.** On short screens the terminal shrinks so it fits
   without scrolling. Below 700px wide it renders at full size and scrolls
   normally.
@@ -89,9 +97,12 @@ are no polyfills and no transpilation step.
 - Progress milestones are announced to screen readers through a polite live
   region, rather than on every one-second tick.
 - Validation errors use `role="alert"`; the long-shift warning uses
-  `role="status"`.
+  `role="status"`. Both are only rewritten when their text actually changes, so
+  a live region is not re-announced on every one-second tick.
+- Text meets the WCAG 2.2 AA contrast minimum of 4.5:1 against the terminal
+  background, in both the running and completed colour schemes.
 - The blinking cursor is disabled under `prefers-reduced-motion`, and dim text
-  is brightened under `prefers-contrast: more`.
+  is brightened further under `prefers-contrast: more`.
 
 ## Privacy
 

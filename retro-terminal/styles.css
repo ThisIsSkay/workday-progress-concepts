@@ -2,7 +2,9 @@
   --bg: #050805;
   --term: #0a120a;
   --phosphor: #4dff7a;
-  --phosphor-dim: #1f7a3a;
+  /* Dim text carries labels at 10-14px, so it needs WCAG AA 4.5:1 against
+     --term. The old #1f7a3a managed only 3.54:1; this is 5.28:1. */
+  --phosphor-dim: #2b9a4c;
   --amber: #ffd166;
   --danger: #ff6b6b;
   --line: #1f4d2b;
@@ -216,7 +218,7 @@ dd { margin: 8px 0 0; font-size: 16px; font-weight: 700; }
 /* Workday complete: the whole terminal goes red. */
 body.complete {
   --phosphor: #ff5f56;
-  --phosphor-dim: #b0453f;
+  --phosphor-dim: #cc5b53; /* 4.70:1 against --term; the old #b0453f was 3.41:1 */
   --line: #5c2020;
 }
 
