@@ -10,7 +10,7 @@ build step, no dependencies, and no network calls.
 **Live demos**
 
 - [retro-terminal](https://thisisskay.github.io/workday-progress-concepts/retro-terminal/) — green phosphor CRT
-- [twinkle-twinkle](https://thisisskay.github.io/workday-progress-concepts/twinkle-twinkle/) — pastel blind-box star
+- [twinkle-twinkle](https://thisisskay.github.io/workday-progress-concepts/twinkle-twinkle/) — Courier Cat, a pastel blind-box ride home
 
 ## Concepts
 
@@ -66,48 +66,45 @@ When the shift completes, the entire terminal switches from green to red.
   without scrolling. Below 700px wide it renders at full size and scrolls
   normally.
 
-### `twinkle-twinkle/` — How I Wonder When You're Done
+### `twinkle-twinkle/` — Courier Cat
 
-A designer-toy take on the same shift: a dusk-to-dawn sky with stars that
-twinkle, and a chunky vinyl star character that reacts to how much of the day
-is left. Styled after blind-box collectibles — pastel palette, glossy rounded
-card, and a ten-slot tray of stars that fills like a collection.
+A courier cat cycling home along a night-time street, where the distance it has
+covered *is* how much of your shift has passed. It sets off at clock-in and
+rolls under the `HOME` sign at 100%. Styled after designer blind-box toys —
+pastel palette, chunky rounded shapes, glossy cream card.
+
+> The folder keeps its original name so the published URL stays stable. The
+> concept inside it is the courier cat.
 
 **Display**
 
 | Element | Description |
 | --- | --- |
-| Star character | Mood tracks the shift: asleep before clock-in, sleepy under half way, awake past it, delighted once finished |
-| Percentage | Progress to four decimal places, whole number large with the live decimals smaller and dimmer beside it |
-| Rhyme line | Steps through the nursery rhyme as the day passes |
-| Progress bar | Gradient capsule, plus a ten-slot tray that fills a star per 10% |
-| Stats | Worked, left, and whole shift |
+| The road | The cat's position along it is the percentage. Parallax skyline, hills and street scroll behind it |
+| Checkpoints | Flags at 25/50/75 that get knocked back and turn green as they are passed |
+| Finish | A striped post and `HOME` sign the cat rolls up to at 100% |
+| Percentage | Four decimal places, whole number large with the live decimals smaller and dimmer beside it |
+| Route line | The rhyme of the ride — a status line that changes as the day goes |
+| Stats | Ridden, to go, and the whole route |
 
-**The cast**
+**The cat's face**
 
-| Character | Behaviour |
+Its expression tracks the ride, and changes *before* each checkpoint rather than
+only after:
+
+| Mood | When |
 | --- | --- |
-| Little star | Blinks every few seconds once awake, hops when the day passes a quarter mark, floats gently throughout |
-| Moon | Sleepy face, drifts overhead all night, sets as the shift finishes |
-| Sun | Climbs in at knock-off time with slowly turning rays |
-| Cloud buddies | Three of them, sailing past at different speeds and depths |
-| Companion stars | Small friends bobbing around the big one, out of phase |
-| Diamond | Appears at 75%, on the line "like a diamond in the sky" |
-| Shooting stars | Occasional, on long cycles, so they read as an event |
-| Confetti | Falls only once the shift is done |
+| Resting | Before clock-in — eyes shut, tail curled |
+| Eager | Just set off — bright eyes, grin, tail wagging |
+| Focused | Settled into the ride |
+| Spotting | Within 4% of a checkpoint — sparkling eyes, blush, speed lines |
+| Tired | Past half way — strained eyes, panting, drooping ear, effort puffs |
+| Second wind | Final stretch — determined brows, tail streaming back |
+| Home | Finished — happy eyes, blush, confetti |
 
-The sky lightens from night to dawn as the shift completes, and the star wakes
-up. It makes no sound.
-
-All motion is CSS on `transform` and `opacity`, so it stays on the compositor —
-the only JavaScript running faster than once a second is the percentage. Under
-`prefers-reduced-motion: reduce` every animation stops; characters that are
-revealed *by* their animation are given an explicit resting state so they do
-not silently vanish, and the two that are purely motion (shooting stars,
-confetti) are dropped rather than frozen in place.
-
-Everything decorative is `aria-hidden`, and nothing in the scene carries meaning
-that is not also written out in text.
+Ears and tail carry the mood too, so it is readable before the face is even
+legible at size. Wheels and pedals turn, the cat bobs as it rides, and it hops
+each time a checkpoint is cleared. The sky warms toward dusk as the shift ends.
 
 **Shared behaviour**
 
@@ -120,8 +117,12 @@ Each concept keeps its own copy of that logic rather than importing a shared
 module, so it can still be opened straight off disk. `tests/verify-twinkle.mjs`
 re-checks the same invariants here, so the two copies cannot quietly drift.
 
-Only the percentage runs at a higher refresh rate (10 Hz); everything else
-updates once a second.
+All motion is CSS on `transform` and `opacity`, so it stays on the compositor —
+only the percentage runs faster than once a second (10 Hz). Everything in the
+scene is `aria-hidden` and says nothing the text does not. Under
+`prefers-reduced-motion: reduce` every animation stops, and the effects that
+exist only as motion — effort puffs, speed lines, confetti — are dropped rather
+than frozen in place.
 
 ## Running locally
 
@@ -149,9 +150,9 @@ retro-terminal/
   script.js     Shift calculation, rendering, persistence, layout fitting
 
 twinkle-twinkle/
-  index.html    Markup, inline SVG star character
-  styles.css    Pastel palette, star moods, sky and completion themes
-  script.js     Shift calculation, star mood, sky seeding, persistence
+  index.html    Markup, inline SVG cat-and-bicycle rig
+  styles.css    Pastel palette, parallax scene, cat moods, animation
+  script.js     Shift calculation, rider position, mood and checkpoints
 
 tests/          Browser checks for both concepts — see tests/README.md
 ```

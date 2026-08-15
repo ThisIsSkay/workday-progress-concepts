@@ -3,84 +3,18 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="A little star that wonders how long is left of your workday.">
-    <meta name="theme-color" content="#3b2f6b">
-    <title>Twinkle Twinkle — How I Wonder When You're Done</title>
-    <link rel="stylesheet" href="styles.css?v=twinkle-v2">
-    <script src="script.js?v=twinkle-v2" defer></script>
+    <meta name="description" content="A courier cat cycling home. Watch how far through the workday you are.">
+    <meta name="theme-color" content="#2f2a52">
+    <title>Courier Cat — Cycling Home</title>
+    <link rel="stylesheet" href="styles.css?v=courier-v1">
+    <script src="script.js?v=courier-v1" defer></script>
   </head>
   <body>
-    <!-- Everything in here is decoration. None of it carries meaning that is
-         not also written out in the card below. -->
-    <div class="sky" aria-hidden="true">
-      <div id="starfield" class="starfield"></div>
-
-      <svg class="moon" viewBox="0 0 100 100">
-        <circle class="moon-body" cx="50" cy="50" r="40"/>
-        <g class="moon-craters">
-          <circle cx="28" cy="27" r="6"/>
-          <circle cx="77" cy="68" r="7.5"/>
-          <circle cx="74" cy="30" r="4"/>
-        </g>
-        <g class="moon-face">
-          <path d="M33 47 q6 7 12 0"/>
-          <path d="M55 47 q6 7 12 0"/>
-          <path d="M44 62 q6 5 12 0"/>
-        </g>
-      </svg>
-
-      <svg class="sun" viewBox="0 0 120 120">
-        <g class="sun-rays">
-          <path d="M60 2 L66 20 L54 20 Z"/><path d="M60 118 L54 100 L66 100 Z"/>
-          <path d="M2 60 L20 54 L20 66 Z"/><path d="M118 60 L100 66 L100 54 Z"/>
-          <path d="M19 19 L34 27 L27 34 Z"/><path d="M101 101 L86 93 L93 86 Z"/>
-          <path d="M101 19 L93 34 L86 27 Z"/><path d="M19 101 L27 86 L34 93 Z"/>
-        </g>
-        <circle class="sun-body" cx="60" cy="60" r="34"/>
-        <g class="sun-face">
-          <ellipse cx="49" cy="55" rx="4" ry="5"/>
-          <ellipse cx="71" cy="55" rx="4" ry="5"/>
-          <path class="sun-smile" d="M50 68 q10 10 20 0 z"/>
-        </g>
-      </svg>
-
-      <div class="clouds">
-        <svg class="cloud cloud-a" viewBox="0 0 120 70"><use href="#cloud-shape"/></svg>
-        <svg class="cloud cloud-b" viewBox="0 0 120 70"><use href="#cloud-shape"/></svg>
-        <svg class="cloud cloud-c" viewBox="0 0 120 70"><use href="#cloud-shape"/></svg>
-      </div>
-
-      <span class="shooter shooter-a"></span>
-      <span class="shooter shooter-b"></span>
-
-      <div class="confetti">
-        <span></span><span></span><span></span><span></span><span></span><span></span>
-        <span></span><span></span><span></span><span></span><span></span><span></span>
-      </div>
-    </div>
-
-    <!-- Defined once, drawn three times by the clouds above. -->
-    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
-      <g id="cloud-shape">
-        <g class="cloud-body">
-          <ellipse cx="34" cy="42" rx="20" ry="16"/>
-          <ellipse cx="60" cy="32" rx="26" ry="22"/>
-          <ellipse cx="88" cy="44" rx="19" ry="15"/>
-          <rect x="14" y="40" width="92" height="20" rx="10"/>
-        </g>
-        <g class="cloud-face">
-          <ellipse cx="50" cy="38" rx="3.4" ry="4.2"/>
-          <ellipse cx="70" cy="38" rx="3.4" ry="4.2"/>
-          <path d="M55 47 q5 5 10 0"/>
-        </g>
-      </g>
-    </svg>
-
     <main>
       <section class="card" aria-labelledby="page-title">
         <header class="intro">
-          <p class="eyebrow">★ blind box no. 02</p>
-          <h1 id="page-title"><span id="title-text">how I wonder when you're done</span></h1>
+          <p class="eyebrow">★ delivery no. 02</p>
+          <h1 id="page-title"><span id="title-text">cycling home</span></h1>
         </header>
 
         <div class="times" aria-label="Workday times">
@@ -98,74 +32,141 @@
         <p id="warning" class="warning" role="status" hidden></p>
 
         <div id="results">
-          <div class="stage">
-            <div class="companions" aria-hidden="true">
-              <span></span><span></span><span></span>
+          <!-- The scene is decoration. Everything it shows is also written out
+               in the readout and stats below it. -->
+          <div id="scene" class="scene" aria-hidden="true">
+            <div class="skyline"></div>
+            <div class="hills"></div>
+            <div class="street"></div>
+
+            <div class="checkpoints">
+              <span class="cp" data-at="25"><i></i></span>
+              <span class="cp" data-at="50"><i></i></span>
+              <span class="cp" data-at="75"><i></i></span>
             </div>
 
-            <svg id="diamond" class="diamond" viewBox="0 0 60 60" aria-hidden="true">
-              <path class="diamond-body" d="M30 4 L52 24 L30 56 L8 24 Z"/>
-              <path class="diamond-shine" d="M30 4 L52 24 L30 24 Z"/>
-            </svg>
+            <div class="finish">
+              <span class="finish-post"></span>
+              <span class="finish-sign">HOME</span>
+            </div>
 
-            <div class="sparkles" aria-hidden="true">
+            <div class="road">
+              <div class="road-dashes"></div>
+            </div>
+
+            <div id="rider" class="rider" data-mood="resting">
+              <div class="puff"><span></span><span></span><span></span></div>
+              <div class="speedlines"><span></span><span></span><span></span></div>
+
+              <svg class="cat" viewBox="0 0 150 116">
+                <!-- rear wheel -->
+                <g class="wheel wheel-back">
+                  <circle class="tyre" cx="34" cy="88" r="21"/>
+                  <g class="spokes">
+                    <path d="M34 70 V106 M16 88 H52 M21 75 L47 101 M47 75 L21 101"/>
+                  </g>
+                  <circle class="hub" cx="34" cy="88" r="4"/>
+                </g>
+
+                <!-- front wheel -->
+                <g class="wheel wheel-front">
+                  <circle class="tyre" cx="118" cy="88" r="21"/>
+                  <g class="spokes">
+                    <path d="M118 70 V106 M100 88 H136 M105 75 L131 101 M131 75 L105 101"/>
+                  </g>
+                  <circle class="hub" cx="118" cy="88" r="4"/>
+                </g>
+
+                <!-- frame -->
+                <g class="frame">
+                  <path d="M34 88 L76 88 M76 88 L62 48 M62 48 L102 48 M102 48 L118 88 M76 88 L102 48"/>
+                  <path class="bars" d="M102 48 L108 39 M100 37 h17"/>
+                  <rect class="seat" x="50" y="41" width="23" height="7" rx="3.5"/>
+                </g>
+
+                <!-- delivery crate on the rear rack -->
+                <g class="crate">
+                  <rect x="12" y="45" width="33" height="25" rx="6"/>
+                  <path class="crate-strap" d="M28 45 V70"/>
+                  <path class="crate-mark" d="M19 55 h8 M19 61 h13"/>
+                </g>
+
+                <!-- pedals: one group, rotated, so the feet orbit the crank -->
+                <g class="crank">
+                  <path d="M76 88 L76 74" />
+                  <path d="M76 88 L76 102" />
+                  <rect class="pedal" x="69" y="70" width="14" height="6" rx="3"/>
+                  <rect class="pedal" x="69" y="99" width="14" height="6" rx="3"/>
+                </g>
+
+                <!-- Cat sits ON the seat and leans toward the bars. Three
+                     overlapping ellipses in one fill read as a single leaning
+                     body far more reliably than a hand-authored blob path. -->
+                <g class="cat-body">
+                  <path class="tail" d="M46 32 q-19 -3 -23 -19"/>
+                  <path class="leg leg-far" d="M66 44 q-1 22 6 36"/>
+                  <ellipse class="torso" cx="60" cy="34" rx="16" ry="13"/>
+                  <ellipse class="torso" cx="80" cy="31" rx="14" ry="11"/>
+                  <ellipse class="torso" cx="93" cy="30" rx="10" ry="9"/>
+                  <path class="leg" d="M73 44 q3 22 3 36"/>
+                  <path class="arm" d="M97 33 q9 3 11 7"/>
+
+                  <!-- Deliberately oversized head: the expression is the whole
+                       point of this concept, and at 110px on screen a smaller
+                       skull left the eyes too fine to read. -->
+                  <g class="head">
+                    <path class="ear ear-back" d="M95 13 L99 0 L110 10 Z"/>
+                    <path class="ear ear-front" d="M112 10 L123 1 L125 18 Z"/>
+                    <circle class="skull" cx="108" cy="23" r="15"/>
+
+                    <g class="face">
+                      <g class="brows"><path d="M96 12 l8 4"/><path d="M122 12 l-8 4"/></g>
+                      <g class="eyes-open"><circle cx="101" cy="22" r="3"/><circle cx="114" cy="22" r="3"/></g>
+                      <g class="eyes-squint"><path d="M97 22 h7"/><path d="M111 22 h7"/></g>
+                      <!-- Bows downward. Curving these up like the happy pair
+                           made the tired face read as contented. -->
+                      <g class="eyes-strain"><path d="M97 21 q3.5 6 7 0"/><path d="M111 21 q3.5 6 7 0"/></g>
+                      <g class="eyes-happy"><path d="M97 24 q3.5 -7 7 0"/><path d="M111 24 q3.5 -7 7 0"/></g>
+                      <g class="eyes-sparkle">
+                        <circle cx="101" cy="22" r="4"/><circle cx="114" cy="22" r="4"/>
+                        <circle class="glint" cx="102.4" cy="20.6" r="1.4"/><circle class="glint" cx="115.4" cy="20.6" r="1.4"/>
+                      </g>
+                      <g class="blush"><ellipse cx="97" cy="30" rx="4.6" ry="3"/><ellipse cx="119" cy="30" rx="4.6" ry="3"/></g>
+                      <path class="snout" d="M105 29 q3 3 5 0"/>
+                      <path class="mouth-flat" d="M104 33 h8"/>
+                      <path class="mouth-pant" d="M104 32 q4.5 8 9 0 z"/>
+                      <path class="mouth-grin" d="M101 32 q7 10 14 0 z"/>
+                      <path class="whiskers" d="M123 26 h9 M123 30 h8"/>
+                    </g>
+                  </g>
+                </g>
+              </svg>
+            </div>
+
+            <div class="confetti">
               <span></span><span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
             </div>
-
-            <svg id="star" class="star" viewBox="0 0 200 200" role="img" aria-labelledby="star-label" data-mood="asleep">
-              <title id="star-label">A little star</title>
-              <path class="star-body"
-                d="M100 28 L117.6 75.7 L168.5 77.8 L128.5 109.3 L142.3 158.2 L100 130 L57.7 158.2 L71.5 109.3 L31.5 77.8 L82.4 75.7 Z"/>
-              <g class="face">
-                <g class="blush">
-                  <ellipse cx="76" cy="107" rx="9" ry="6"/>
-                  <ellipse cx="124" cy="107" rx="9" ry="6"/>
-                </g>
-                <g class="eyes-closed">
-                  <path d="M79 95 q6 7 12 0"/>
-                  <path d="M109 95 q6 7 12 0"/>
-                </g>
-                <g class="eyes-open">
-                  <ellipse cx="85" cy="95" rx="5.5" ry="7"/>
-                  <ellipse cx="115" cy="95" rx="5.5" ry="7"/>
-                </g>
-                <g class="eyes-happy">
-                  <path d="M79 98 q6 -8 12 0"/>
-                  <path d="M109 98 q6 -8 12 0"/>
-                </g>
-                <path class="mouth-small" d="M94 110 q6 5 12 0"/>
-                <path class="mouth-wide" d="M90 108 q10 12 20 0 z"/>
-              </g>
-              <g class="zzz" aria-hidden="true">
-                <text x="146" y="56">z</text>
-                <text x="164" y="42">z</text>
-                <text x="180" y="30">z</text>
-              </g>
-            </svg>
-
-            <p id="mood-note" class="mood-note">up above the world so high</p>
           </div>
+
+          <p id="mood-note" class="mood-note">wheels up</p>
 
           <div class="readout">
             <strong id="percent" class="percent"><span class="pct-int">--</span><span class="pct-dec">.--</span><span class="pct-sign">%</span></strong>
-            <p id="end-note" class="end-note">counting the minutes…</p>
+            <p id="end-note" class="end-note">plotting the route…</p>
           </div>
 
           <div class="progress-wrap">
             <div id="progress-track" class="track" role="progressbar" aria-label="Workday completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
               <div id="progress-fill" class="fill"></div>
             </div>
-            <div class="tray" aria-hidden="true">
-              <span></span><span></span><span></span><span></span><span></span>
-              <span></span><span></span><span></span><span></span><span></span>
-            </div>
             <p id="sr-status" class="sr-only" role="status" aria-live="polite"></p>
           </div>
 
           <dl class="stats">
-            <div><dt>worked</dt><dd id="worked">--h --m</dd></div>
-            <div><dt>left</dt><dd id="remaining">--h --m</dd></div>
-            <div><dt>whole shift</dt><dd id="duration">--h --m</dd></div>
+            <div><dt>ridden</dt><dd id="worked">--h --m</dd></div>
+            <div><dt>to go</dt><dd id="remaining">--h --m</dd></div>
+            <div><dt>whole route</dt><dd id="duration">--h --m</dd></div>
           </dl>
         </div>
 

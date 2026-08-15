@@ -6,14 +6,10 @@ const warning = document.querySelector("#warning");
 const titleText = document.querySelector("#title-text");
 const srStatus = document.querySelector("#sr-status");
 const percentEl = document.querySelector("#percent");
-const starEl = document.querySelector("#star");
+const sceneEl = document.querySelector("#scene");
+const riderEl = document.querySelector("#rider");
 const fillEl = document.querySelector("#progress-fill");
-const diamondEl = document.querySelector("#diamond");
-const trayStars = [...document.querySelectorAll(".tray span")];
-
-// "like a diamond in the sky" is the fourth line of the rhyme, so the gem
-// turns up exactly when that line does.
-const DIAMOND_AT = 75;
+const checkpointEls = [...document.querySelectorAll(".cp")];
 
 // The shift model below is shared with the retro-terminal concept. Each concept
 // stays dependency-free so it can be opened straight off disk, which means this
@@ -22,6 +18,10 @@ const DIAMOND_AT = 75;
 
 const LONG_SHIFT_MINUTES = 16 * 60; // flag shifts longer than 16h as likely AM/PM typos
 const PERCENT_HZ = 10; // only the big number ticks this fast; everything else stays at 1Hz
+
+// Checkpoints the rider passes, and how far out they start eyeing the next one.
+const CHECKPOINTS = [25, 50, 75];
+const SPOT_WINDOW = 4;
 
 const ERR_IDENTICAL = "clock in and clock out can't be the same time";
 const ERR_INCOMPLETE = "please set both a clock in and a clock out time";
@@ -62,12 +62,12 @@ restoreTime(startInput, "workday-start", "09:00");
 restoreTime(endInput, "workday-end", "18:00");
 
 const MESSAGES = [
-  [0, "still fast asleep…"],
-  [1, "twinkle, twinkle, little star"],
-  [25, "how I wonder what you are"],
-  [50, "up above the world so high"],
-  [75, "like a diamond in the sky"],
-  [100, "twinkle, twinkle — time to go home"],
+  [0, "kickstand down, waiting on the shift"],
+  [1, "wheels up — off we go"],
+  [25, "first checkpoint behind us"],
+  [50, "halfway. the legs are talking."],
+  [75, "final stretch, mostly downhill"],
+  [100, "home. park the bike."],
 ];
 
 let lastMilestone = -1;
@@ -128,7 +128,7 @@ function getShiftBounds(now) {
   return validateShift({ start, end }, startMinutes, endMinutes, wallSpanMinutes);
 }
 
-// WORKED floors while LEFT ceils, so the two always add up to the whole shift
+// RIDDEN floors while TO GO ceils, so the two always add up to the whole route
 // instead of reading a minute short for most of the day.
 function formatDuration(milliseconds, round = Math.floor) {
   const totalMinutes = Math.max(0, round(milliseconds / 60000));
@@ -167,10 +167,20 @@ function renderPercent(progress) {
   }
 }
 
+// Is a checkpoint close enough ahead to be worth bracing for? This is what
+// gives the rider an anticipation beat instead of only reacting after the fact.
+function isApproachingCheckpoint(progress) {
+  return CHECKPOINTS.some((cp) => progress < cp && progress >= cp - SPOT_WINDOW);
+}
+
 function moodFor(progress, notStarted, complete) {
-  if (complete) return "happy";
-  if (notStarted) return "asleep";
-  return progress < 50 ? "sleepy" : "awake";
+  if (complete) return "done";
+  if (notStarted) return "resting";
+  if (isApproachingCheckpoint(progress)) return "spotting";
+  if (progress < 25) return "eager";
+  if (progress < 50) return "focused";
+  if (progress < 75) return "tired";
+  return "secondwind";
 }
 
 function update() {
@@ -184,7 +194,7 @@ function update() {
     setText(error, shift.error);
     warning.hidden = true;
     document.body.classList.remove("complete");
-    setText(titleText, "how I wonder when you're done");
+    setText(titleText, "cycling home");
     return;
   }
 
@@ -200,16 +210,16 @@ function update() {
   document.body.classList.toggle("complete", complete);
 
   setText(titleText, complete
-    ? "twinkle twinkle — you may go home"
+    ? "made it home"
     : notStarted
-      ? "the little star is still asleep"
-      : "how I wonder when you're done");
+      ? "not on the road yet"
+      : "cycling home");
 
   // Typo detection is about what was typed, so measure the entered wall-clock
   // span. Elapsed time gains or loses an hour across a clock change, which
   // would flag — or miss — a shift purely because of the date it falls on.
   warning.hidden = shift.wallSpanMinutes <= LONG_SHIFT_MINUTES;
-  setText(warning, `that's a ${formatDuration(shift.wallSpanMinutes * 60000)} shift — check am/pm?`);
+  setText(warning, `that's a ${formatDuration(shift.wallSpanMinutes * 60000)} route — check am/pm?`);
 
   const endTime = shift.end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   const startTime = shift.start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
@@ -217,19 +227,23 @@ function update() {
   const wholePercent = Math.floor(progress);
 
   renderPercent(progress);
-  starEl.dataset.mood = moodFor(progress, notStarted, complete);
+  riderEl.dataset.mood = moodFor(progress, notStarted, complete);
+  // The rider's position along the road is the progress bar.
+  sceneEl.style.setProperty("--p", progress.toFixed(2));
+
+  for (const cp of checkpointEls) {
+    cp.classList.toggle("passed", progress >= Number(cp.dataset.at));
+  }
 
   setText(document.querySelector("#mood-note"), message);
   setText(document.querySelector("#end-note"), complete
-    ? `all done · you finished at ${endTime}`
+    ? `home since ${endTime}`
     : notStarted
-      ? `not started yet · you clock in at ${startTime}`
-      : `home time at ${endTime}`);
+      ? `not started · you set off at ${startTime}`
+      : `home by ${endTime}`);
 
-  diamondEl.classList.toggle("show", progress >= DIAMOND_AT);
   fillEl.style.width = `${progress}%`;
   document.querySelector("#progress-track").setAttribute("aria-valuenow", wholePercent);
-  trayStars.forEach((star, i) => star.classList.toggle("on", wholePercent >= (i + 1) * 10));
 
   document.querySelector("#worked").textContent = formatDuration(worked);
   document.querySelector("#remaining").textContent = formatDuration(remaining, Math.ceil);
@@ -239,9 +253,9 @@ function update() {
   if (milestone !== lastMilestone) {
     const isFirstPaint = lastMilestone === -1;
     lastMilestone = milestone;
-    srStatus.textContent = `${wholePercent} percent through the day. ${message}`;
-    // A hop for reaching a new quarter, but not for merely arriving on the
-    // page part-way through one.
+    srStatus.textContent = `${wholePercent} percent of the way home. ${message}`;
+    // A hop for clearing a checkpoint, but not for merely loading the page
+    // part-way through the route.
     if (!isFirstPaint) cheer();
   }
 }
@@ -250,10 +264,10 @@ function update() {
 // re-adding it in the same tick does nothing.
 function cheer() {
   clearTimeout(cheerTimer);
-  starEl.classList.remove("cheer");
-  void starEl.offsetWidth;
-  starEl.classList.add("cheer");
-  cheerTimer = setTimeout(() => starEl.classList.remove("cheer"), 950);
+  riderEl.classList.remove("cheer");
+  void riderEl.offsetWidth;
+  riderEl.classList.add("cheer");
+  cheerTimer = setTimeout(() => riderEl.classList.remove("cheer"), 850);
 }
 
 // Only the big number runs fast. Everything else stays on the 1Hz loop, so the
@@ -262,7 +276,7 @@ function updateLivePercent() {
   if (!currentShift || document.hidden) return;
   const progress = progressForShift(currentShift, new Date());
   // Crossing 100 between 1Hz ticks would otherwise park the number at 100.0000%
-  // while the star, bar and colours still read as in-progress. Hand the
+  // while the rider, road and colours still read as in-progress. Hand the
   // crossing to the full update instead.
   if (progress >= 100 && !document.body.classList.contains("complete")) {
     update();
@@ -282,27 +296,6 @@ function saveTimes() {
   update();
 }
 
-// Scatter the backdrop. Positions are random per load so it never looks like a
-// fixed pattern; the twinkle itself is CSS, and stops under reduced motion.
-function seedSky() {
-  const sky = document.querySelector("#starfield");
-  if (!sky) return;
-  const fragment = document.createDocumentFragment();
-  for (let i = 0; i < 70; i++) {
-    const star = document.createElement("i");
-    const size = 1 + Math.random() * 2.6;
-    star.style.width = `${size}px`;
-    star.style.height = `${size}px`;
-    star.style.left = `${Math.random() * 100}%`;
-    // Denser overhead, thinning out towards the bright horizon.
-    star.style.top = `${Math.pow(Math.random(), 1.5) * 88}%`;
-    star.style.setProperty("--dur", `${2.6 + Math.random() * 4}s`);
-    star.style.setProperty("--delay", `${Math.random() * 5}s`);
-    fragment.append(star);
-  }
-  sky.append(fragment);
-}
-
 // Timers are throttled in background tabs and stop entirely while a device
 // sleeps, so catch up as soon as the page is on screen again.
 document.addEventListener("visibilitychange", () => {
@@ -318,12 +311,3 @@ endInput.addEventListener("input", saveTimes);
 update();
 setInterval(update, 1000);
 setInterval(updateLivePercent, 1000 / PERCENT_HZ);
-
-// Decoration comes last and cannot take the page down with it. Seeding the sky
-// first once threw on a renamed selector and killed the whole script before a
-// single number had been drawn.
-try {
-  seedSky();
-} catch {
-  // A missing backdrop is not worth losing the clock over.
-}

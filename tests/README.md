@@ -19,7 +19,7 @@ Exits non-zero if any suite fails. Set `PORT` to use a different port, or
 | `verify-storage.mjs` | The page stays usable where `localStorage` throws (blocked cookies, sandboxed iframe) |
 | `sums.mjs` | `WORKED + REMAINING` always equals `TOTAL SHIFT` |
 | `sweep.mjs` | Shrink-to-fit leaves no vertical overflow across 13 viewport sizes |
-| `verify-twinkle.mjs` | The twinkle-twinkle concept: star moods, the ten-slot tray, the cast of sky characters, reduced-motion behaviour, and the same shift-model invariants the retro terminal is held to, since that logic is duplicated rather than shared |
+| `verify-twinkle.mjs` | The courier-cat concept: the rider's position tracking the percentage, checkpoints being cleared, every face mood mapping to exactly one pair of eyes and one mouth, the anticipation beat before a checkpoint, reduced-motion behaviour, and the same shift-model invariants the retro terminal is held to, since that logic is duplicated rather than shared |
 
 ## Dates these rely on
 
