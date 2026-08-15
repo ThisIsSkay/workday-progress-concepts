@@ -214,14 +214,20 @@ console.log("\n=== prefers-reduced-motion turns the motion off ===");
   await page.goto(URL);
   await page.clock.runFor(150);
   const r = await page.evaluate(() => ({
-    running: document.getAnimations().filter((a) => a.playState === "running").length,
+    // Only CSS animations: getAnimations() also returns transient CSSTransition
+    // objects from state changes JS applies on load, which come and go and made
+    // this assertion flaky. Transitions are disabled here too, via CSS.
+    running: document.getAnimations()
+      .filter((a) => a.playState === "running" && a.animationName !== undefined).length,
+    transitions: document.getAnimations().filter((a) => a.transitionProperty !== undefined).length,
     // Effort puffs and speed lines only exist as motion; frozen they read as debris.
     puff: getComputedStyle(document.querySelector(".puff")).display,
     speed: getComputedStyle(document.querySelector(".speedlines")).display,
     riderVisible: +getComputedStyle(document.querySelector("#rider")).opacity,
     percent: document.querySelector("#percent").textContent,
   }));
-  check(`no animations left running (${r.running})`, r.running, 0);
+  check(`no CSS animations left running (${r.running})`, r.running, 0);
+  check(`and no transitions gliding either (${r.transitions})`, r.transitions, 0);
   check("effort puffs are dropped rather than frozen", r.puff, "none");
   check("speed lines are dropped rather than frozen", r.speed, "none");
   check("the cat is still visible", r.riderVisible, (v) => v > 0.9);

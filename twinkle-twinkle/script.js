@@ -71,6 +71,7 @@ const MESSAGES = [
 ];
 
 let lastMilestone = -1;
+let firstPaint = true;
 let cheerTimer = null;
 let currentShift = null;
 let lastPercentInt = null;
@@ -228,8 +229,15 @@ function update() {
 
   renderPercent(progress);
   riderEl.dataset.mood = moodFor(progress, notStarted, complete);
-  // The rider's position along the road is the progress bar.
+  // The rider's position along the road is the progress bar. On the very first
+  // paint it must not animate: --p starts at 0, so the transition would slide
+  // the cat in from the kerb every time the page loads.
+  if (firstPaint) riderEl.style.transition = "none";
   sceneEl.style.setProperty("--p", progress.toFixed(2));
+  if (firstPaint) {
+    firstPaint = false;
+    requestAnimationFrame(() => { riderEl.style.transition = ""; });
+  }
 
   for (const cp of checkpointEls) {
     cp.classList.toggle("passed", progress >= Number(cp.dataset.at));

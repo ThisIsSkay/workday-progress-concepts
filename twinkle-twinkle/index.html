@@ -6,8 +6,8 @@
     <meta name="description" content="A courier cat cycling home. Watch how far through the workday you are.">
     <meta name="theme-color" content="#2f2a52">
     <title>Courier Cat — Cycling Home</title>
-    <link rel="stylesheet" href="styles.css?v=courier-v1">
-    <script src="script.js?v=courier-v1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=courier-v2">
+    <script src="script.js?v=courier-v2" defer></script>
   </head>
   <body>
     <main>
@@ -35,9 +35,12 @@
           <!-- The scene is decoration. Everything it shows is also written out
                in the readout and stats below it. -->
           <div id="scene" class="scene" aria-hidden="true">
+            <div class="moon"></div>
             <div class="skyline"></div>
             <div class="hills"></div>
             <div class="street"></div>
+            <div class="haze"></div>
+            <div class="lamps"></div>
 
             <div class="checkpoints">
               <span class="cp" data-at="25"><i></i></span>
@@ -55,6 +58,7 @@
             </div>
 
             <div id="rider" class="rider" data-mood="resting">
+              <div class="ground-shadow"></div>
               <div class="puff"><span></span><span></span><span></span></div>
               <div class="speedlines"><span></span><span></span><span></span></div>
 
@@ -108,6 +112,10 @@
                   <ellipse class="torso" cx="60" cy="34" rx="16" ry="13"/>
                   <ellipse class="torso" cx="80" cy="31" rx="14" ry="11"/>
                   <ellipse class="torso" cx="93" cy="30" rx="10" ry="9"/>
+                  <!-- Two shapes turn a flat fill into a form: an underside in
+                       shadow, and a rim of light along the top edge. -->
+                  <path class="fur-shade" d="M45 38 q16 10 36 6 q14 -2 21 -8 q-2 10 -20 13 q-24 3 -37 -11 z"/>
+                  <path class="fur-rim" d="M47 26 q14 -9 33 -6 q13 2 19 7"/>
                   <path class="leg" d="M73 44 q3 22 3 36"/>
                   <path class="arm" d="M97 33 q9 3 11 7"/>
 
@@ -118,6 +126,8 @@
                     <path class="ear ear-back" d="M95 13 L99 0 L110 10 Z"/>
                     <path class="ear ear-front" d="M112 10 L123 1 L125 18 Z"/>
                     <circle class="skull" cx="108" cy="23" r="15"/>
+                    <path class="fur-shade head-shade" d="M94 29 q14 12 28 0 q-3 10 -14 10 q-11 0 -14 -10 z"/>
+                    <path class="fur-rim head-rim" d="M96 15 q11 -8 23 -1"/>
 
                     <g class="face">
                       <g class="brows"><path d="M96 12 l8 4"/><path d="M122 12 l-8 4"/></g>
