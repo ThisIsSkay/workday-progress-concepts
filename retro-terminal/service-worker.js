@@ -40,13 +40,14 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   // Network-first keeps GitHub Pages updates fresh while the cached shell
-  // remains available when the phone or laptop is offline.
+  // remains available when the phone or laptop is offline. Awaiting cache.put
+  // inside the response promise also keeps the worker alive for the write.
   event.respondWith(
     fetch(request)
-      .then((response) => {
+      .then(async (response) => {
         if (response && response.ok) {
-          const copy = response.clone();
-          event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)));
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(request, response.clone());
         }
         return response;
       })
