@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="See when your workday ends and watch the shift tick toward 100%.">
     <meta name="theme-color" content="#0a0f0a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="WORKDAY.SYS">
     <title>WORKDAY.SYS — Retro Terminal</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
     <link rel="stylesheet" href="styles.css?v=centred-percent-v1">
     <script src="script.js?v=centred-percent-v1" defer></script>
   </head>
@@ -16,7 +23,7 @@
         <div class="glow" aria-hidden="true"></div>
 
         <header class="intro">
-          <p class="eyebrow">C:\SYSTEM\> RUN WORKDAY.SYS</p>
+          <p class="eyebrow">C:\SYSTEM\&gt; RUN WORKDAY.SYS</p>
           <h1 id="page-title"><span id="title-text">WHEN CAN I LOG OFF</span><span class="cursor" aria-hidden="true">_</span></h1>
           <p class="subtitle">// Enter shift parameters below. Do not power cycle.</p>
         </header>
@@ -75,5 +82,14 @@
         </footer>
       </section>
     </main>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./service-worker.js", { scope: "./" })
+            .catch((err) => console.warn("WORKDAY.SYS service worker registration failed:", err));
+        });
+      }
+    </script>
   </body>
 </html>
