@@ -316,12 +316,11 @@ function saveTimes() {
 }
 
 // Shrink the whole terminal to fit the viewport so it never needs scrolling
-// on short screens (e.g. 720p laptops). Skipped on narrow phones, where
-// scrolling is natural and shrink-to-fit would make text too small.
+// on short screens, including phone browser viewports where the URL bar leaves
+// less vertical room than an installed standalone PWA.
 const card = document.querySelector(".crt");
 function fitToViewport() {
   card.style.zoom = "1";
-  if (window.innerWidth < 700) return;
   // The gutter is main's padding, which is a clamp() and so changes with the
   // viewport. A hard-coded guess understated it and left the card overflowing
   // on exactly the 720p screens this exists for, so measure it instead.
