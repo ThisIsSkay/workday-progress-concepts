@@ -36,7 +36,7 @@ for _ in $(seq 1 30); do
 done
 
 FAILED=0
-for suite in verify verify-dst verify-storage sums sweep verify-twinkle; do
+for suite in verify verify-dst verify-storage sums sweep verify-pwa verify-twinkle; do
   echo "=============================== $suite"
   node "tests/$suite.mjs" || FAILED=1
 done
