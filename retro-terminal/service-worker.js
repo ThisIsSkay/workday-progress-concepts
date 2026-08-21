@@ -1,15 +1,15 @@
-const CACHE_NAME = "workday-sys-pwa-v1";
+const CACHE_NAME = "workday-sys-pwa-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css?v=centred-percent-v1",
   "./script.js?v=centred-percent-v1",
-  "./manifest.webmanifest",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png",
-  "./icons/apple-touch-icon.png",
-  "./icons/favicon-64.png"
+  "./manifest.webmanifest?v=mono-v1",
+  "./icons/icon-192.png?v=mono-v1",
+  "./icons/icon-512.png?v=mono-v1",
+  "./icons/icon-maskable-512.png?v=mono-v1",
+  "./icons/apple-touch-icon.png?v=mono-v1",
+  "./icons/favicon-64.png?v=mono-v1"
 ];
 
 const appUrl = (path) => new URL(path, self.registration.scope).toString();
